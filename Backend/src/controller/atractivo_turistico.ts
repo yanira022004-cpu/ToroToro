@@ -19,3 +19,11 @@ JOIN
 
   return res.status(200).json(atractivo_turistico.rows)
 }
+
+export const atractivoTuristicoCoords = async (_req: Request, res: Response) => {
+  const coords = await pool.query(
+    'SELECT latitud, longitud FROM atractivo_turistico'
+  )
+
+  return res.status(200).json(coords.rows)
+}

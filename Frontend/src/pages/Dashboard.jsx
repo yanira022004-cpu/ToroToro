@@ -173,7 +173,13 @@ export const Dashboard = () => {
           <Link to="/servicios" style={{ ...styles.sidebarItem, ...styles.link }}>
             🍽️ Servicios
           </Link>
-          <div style={styles.sidebarItem}>🌍 Mapa 3D</div>
+          <br />
+          <br />
+          <Link to="/mapa3d" style={{ ...styles.sidebarItem, ...styles.link }}>
+          🌍 Mapa 3D
+          </Link>
+          <br />
+          <br />
                   <button
           onClick={() => setDarkMode(!darkMode)}
           style={styles.darkButton}

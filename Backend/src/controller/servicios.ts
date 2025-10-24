@@ -22,3 +22,11 @@ ON
 
   return res.status(200).json(servicios.rows)
 }
+
+export const getServicioCoord = async (_req: Request, res: Response) => {
+  const coordServicios = await pool.query(
+    'SELECT latitud, longitud FROM servicios;',
+  )
+
+  return res.status(200).json(coordServicios.rows)
+}
