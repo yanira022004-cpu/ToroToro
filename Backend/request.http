@@ -3,3 +3,6 @@ GET http://localhost:3333/api/servicio_coords
 
 ###
 GET http://localhost:3333/api/atractivo_coords
+
+###
+GET http://localhost:3333/api/track_toro_toro
