@@ -163,8 +163,11 @@ export const ServiciosDashboard = () => {
           <div style={{ ...styles.sidebarItem, ...styles.activeSidebarItem }}>
             🍽️ Servicios
           </div>
+          <br />
 
-          <div style={styles.sidebarItem}>🌍 Mapa 3D</div>
+          <Link to="/mapa3d" style={ { ...styles.sidebarItem, ...styles.link } }>🌍 Mapa 3D</Link>
+          <br />
+          <br />
           <button
             onClick={() => setDarkMode(!darkMode)}
             style={styles.darkButton}

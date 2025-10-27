@@ -149,45 +149,136 @@ INSERT INTO atractivo_turistico (nombre, tipo_atractivo, estado, tiempo_visita, 
 -- 25. Plaza Principal ToroToro
 ('Plaza Principal ToroToro', 'MIRADOR', 'BUENO', 30, 2600.00, -65.762947, -18.133521, 207636.11, 7992846.89, 1, 8, ST_SetSRID(ST_MakePoint(-65.762947, -18.133521), 4326));
 
+
 -- =====================
--- INSERCIÓN DE SERVICIOS DE TOROTORO
+-- INSERCIÓN DE ÁREAS PROTEGIDAS
 -- =====================
-INSERT INTO servicios (nombre, tipo_servicio, costo, direccion, telefono, calificacion, longitud, latitud, atractivo_turistico_id, geom) VALUES
--- Servicios cerca de Plaza Principal ToroToro (id_atrac_turist = 16)
-('Hostal Mirador ToroToro', 'HOTEL', 120, 'Calle Bolívar frente a la plaza principal', '+591 4 1234567', 4.2, -65.762850, -18.133450, 16, ST_SetSRID(ST_MakePoint(-65.762850, -18.133450), 4326)),
-('Restaurante El Cañón', 'RESTAURANTE', 80, 'Plaza Principal ToroToro', '+591 4 1234568', 4.5, -65.762920, -18.133520, 16, ST_SetSRID(ST_MakePoint(-65.762920, -18.133520), 4326)),
-('Transporte Turístico ToroToro Tours', 'TRANSPORTE', 150, 'Terminal de buses ToroToro', '+591 4 1234569', 4.0, -65.763100, -18.133800, 16, ST_SetSRID(ST_MakePoint(-65.763100, -18.133800), 4326)),
-('Guías Locales ToroToro Adventure', 'GUIA_TURISTICO', 100, 'Oficina de turismo municipal', '+591 4 1234570', 4.7, -65.762780, -18.133600, 16, ST_SetSRID(ST_MakePoint(-65.762780, -18.133600), 4326)),
 
--- Servicios cerca de Caverna de Umajalanta (id_atrac_turist = 1)
-('Albergue Umajalanta', 'HOTEL', 90, 'Camino a Caverna Umajalanta', '+591 4 1234571', 4.1, -65.810000, -18.115000, 1, ST_SetSRID(ST_MakePoint(-65.810000, -18.115000), 4326)),
-('Cafetería La Caverna', 'CAFETERIA', 35, 'Entrada Caverna Umajalanta', '+591 4 1234572', 4.3, -65.811200, -18.114800, 1, ST_SetSRID(ST_MakePoint(-65.811200, -18.114800), 4326)),
+INSERT INTO area_prot (area, perimetro, descripcion, atractivo_turistico_id) VALUES
+-- 1. Área protegida para Caverna de Umajalanta
+(
+    ST_SetSRID(ST_GeomFromText('POLYGON((-65.812513 -18.115516, -65.810313 -18.115516, -65.810313 -18.113516, -65.812513 -18.113516, -65.812513 -18.115516))'), 4326),
+    ST_SetSRID(ST_GeomFromText('LINESTRING(-65.812513 -18.115516, -65.810313 -18.115516, -65.810313 -18.113516, -65.812513 -18.113516, -65.812513 -18.115516)'), 4326),
+    'Área de protección especial para la caverna kárstica de Umajalanta con formaciones de estalactitas y estalagmitas únicas',
+    1
+),
 
--- Servicios cerca de Cascada El Vergel (id_atrac_turist = 3)
-('Refugio El Vergel', 'HOTEL', 110, 'Sendero a Cascada El Vergel', '+591 4 1234573', 4.4, -65.774500, -18.111800, 3, ST_SetSRID(ST_MakePoint(-65.774500, -18.111800), 4326)),
-('Restaurante La Cascada', 'RESTAURANTE', 70, 'Mirador Cascada El Vergel', '+591 4 1234574', 4.6, -65.774300, -18.111600, 3, ST_SetSRID(ST_MakePoint(-65.774300, -18.111600), 4326)),
+-- 2. Área protegida para Caverna de P'isqu Waek'atana
+(
+    ST_SetSRID(ST_GeomFromText('POLYGON((-65.808802 -18.120416, -65.806802 -18.120416, -65.806802 -18.118416, -65.808802 -18.118416, -65.808802 -18.120416))'), 4326),
+    ST_SetSRID(ST_GeomFromText('LINESTRING(-65.808802 -18.120416, -65.806802 -18.120416, -65.806802 -18.118416, -65.808802 -18.118416, -65.808802 -18.120416)'), 4326),
+    'Zona de protección de la caverna secundaria con ecosistema subterráneo frágil',
+    2
+),
 
--- Servicios cerca de Huellas de Dinosaurio (id_atrac_turist = 9)
-('Centro de Interpretación Paleontológico', 'GUIA_TURISTICO', 50, 'Sitio Huellas de Dinosaurio', '+591 4 1234575', 4.8, -65.761000, -18.132200, 9, ST_SetSRID(ST_MakePoint(-65.761000, -18.132200), 4326)),
-('Cafetería Dino Track', 'CAFETERIA', 40, 'Camino a huellas de dinosaurios', '+591 4 1234576', 4.2, -65.760500, -18.132500, 9, ST_SetSRID(ST_MakePoint(-65.760500, -18.132500), 4326)),
+-- 3. Área protegida para Cascada El Vergel
+(
+    ST_SetSRID(ST_GeomFromText('POLYGON((-65.775025 -18.112429, -65.773025 -18.112429, -65.773025 -18.110429, -65.775025 -18.110429, -65.775025 -18.112429))'), 4326),
+    ST_SetSRID(ST_GeomFromText('LINESTRING(-65.775025 -18.112429, -65.773025 -18.112429, -65.773025 -18.110429, -65.775025 -18.110429, -65.775025 -18.112429)'), 4326),
+    'Área de protección del ecosistema acuático y bosque húmedo alrededor de la cascada',
+    3
+),
 
--- Servicios cerca de Ciudad de Itas (id_atrac_turist = 12)
-('Campamento Itas', 'HOTEL', 60, 'Base Ciudad de Itas', '+591 4 1234577', 3.9, -65.881000, -18.106500, 12, ST_SetSRID(ST_MakePoint(-65.881000, -18.106500), 4326)),
-('Guías Especializados Itas', 'GUIA_TURISTICO', 120, 'Acceso a Ciudad de Itas', '+591 4 1234578', 4.9, -65.882000, -18.106000, 12, ST_SetSRID(ST_MakePoint(-65.882000, -18.106000), 4326)),
+-- 4. Área protegida para Cañón de ToroToro
+(
+    ST_SetSRID(ST_GeomFromText('POLYGON((-65.772833 -18.110312, -65.770833 -18.110312, -65.770833 -18.108312, -65.772833 -18.108312, -65.772833 -18.110312))'), 4326),
+    ST_SetSRID(ST_GeomFromText('LINESTRING(-65.772833 -18.110312, -65.770833 -18.110312, -65.770833 -18.108312, -65.772833 -18.108312, -65.772833 -18.110312)'), 4326),
+    'Zona de protección del cañón con formaciones geológicas únicas y estratos sedimentarios',
+    4
+),
 
--- Servicios médicos y otros esenciales
-('Centro de Salud ToroToro', 'CENTRO_DE_SALUD', 0, 'Av. Principal ToroToro', '+591 4 1234579', 4.0, -65.763500, -18.134000, 16, ST_SetSRID(ST_MakePoint(-65.763500, -18.134000), 4326)),
-('Puesto de Socorro Umajalanta', 'CENTRO_DE_SALUD', 0, 'Camino a caverna Umajalanta', '+591 4 1234580', 3.8, -65.809500, -18.115500, 1, ST_SetSRID(ST_MakePoint(-65.809500, -18.115500), 4326)),
+-- 5. Área protegida para Cerro de Huayllas
+(
+    ST_SetSRID(ST_GeomFromText('POLYGON((-66.884333 -17.734333, -66.882333 -17.734333, -66.882333 -17.732333, -66.884333 -17.732333, -66.884333 -17.734333))'), 4326),
+    ST_SetSRID(ST_GeomFromText('LINESTRING(-66.884333 -17.734333, -66.882333 -17.734333, -66.882333 -17.732333, -66.884333 -17.732333, -66.884333 -17.734333)'), 4326),
+    'Área protegida del cerro con yacimientos paleontológicos y vistas panorámicas',
+    5
+),
 
--- Servicios cerca de Mirador del Cóndor (id_atrac_turist = 8)
-('Refugio El Cóndor', 'HOTEL', 130, 'Base Mirador del Cóndor', '+591 4 1234581', 4.3, -65.683500, -18.202800, 8, ST_SetSRID(ST_MakePoint(-65.683500, -18.202800), 4326)),
-('Transporte Aventura Extrema', 'TRANSPORTE', 200, 'Ruta a Mirador del Cóndor', '+591 4 1234582', 4.1, -65.684000, -18.203200, 8, ST_SetSRID(ST_MakePoint(-65.684000, -18.203200), 4326)),
+-- 6. Área protegida para Puente de los Enamorados
+(
+    ST_SetSRID(ST_GeomFromText('POLYGON((-65.769327 -18.115035, -65.767327 -18.115035, -65.767327 -18.113035, -65.769327 -18.113035, -65.769327 -18.115035))'), 4326),
+    ST_SetSRID(ST_GeomFromText('LINESTRING(-65.769327 -18.115035, -65.767327 -18.115035, -65.767327 -18.113035, -65.769327 -18.113035, -65.769327 -18.115035)'), 4326),
+    'Zona de protección de la formación natural del puente rocoso y su entorno',
+    6
+),
 
--- Servicios cerca de Cementerio de Tortugas (id_atrac_turist = 10)
-('Campamento Paleontológico', 'HOTEL', 85, 'Cerca Cementerio de Tortugas', '+591 4 1234583', 4.0, -65.750500, -18.158000, 10, ST_SetSRID(ST_MakePoint(-65.750500, -18.158000), 4326)),
-('Guía Especializado Fósiles', 'GUIA_TURISTICO', 90, 'Sitio Cementerio de Tortugas', '+591 4 1234584', 4.7, -65.749500, -18.158300, 10, ST_SetSRID(ST_MakePoint(-65.749500, -18.158300), 4326)),
+-- 7. Área protegida para Puente de Piedra
+(
+    ST_SetSRID(ST_GeomFromText('POLYGON((-65.771741 -18.110832, -65.769741 -18.110832, -65.769741 -18.108832, -65.771741 -18.108832, -65.771741 -18.110832))'), 4326),
+    ST_SetSRID(ST_GeomFromText('LINESTRING(-65.771741 -18.110832, -65.769741 -18.110832, -65.769741 -18.108832, -65.771741 -18.108832, -65.771741 -18.110832)'), 4326),
+    'Área de protección geológica del puente natural de piedra caliza',
+    7
+),
 
--- Servicios generales adicionales
-('Hotel Plaza ToroToro', 'HOTEL', 180, 'Plaza Principal', '+591 4 1234585', 4.4, -65.762600, -18.133300, 16, ST_SetSRID(ST_MakePoint(-65.762600, -18.133300), 4326)),
-('Restaurante Tradicional Andino', 'RESTAURANTE', 95, 'Calle Comercio ToroToro', '+591 4 1234586', 4.6, -65.763200, -18.133900, 16, ST_SetSRID(ST_MakePoint(-65.763200, -18.133900), 4326)),
-('Agencia de Viajes ToroToro', 'TRANSPORTE', 180, 'Oficina central de tours', '+591 4 1234587', 4.3, -65.762400, -18.133700, 16, ST_SetSRID(ST_MakePoint(-65.762400, -18.133700), 4326));
+-- 8. Área protegida para Mirador del Cóndor
+(
+    ST_SetSRID(ST_GeomFromText('POLYGON((-65.683629 -18.204334, -65.681629 -18.204334, -65.681629 -18.202334, -65.683629 -18.202334, -65.683629 -18.204334))'), 4326),
+    ST_SetSRID(ST_GeomFromText('LINESTRING(-65.683629 -18.204334, -65.681629 -18.204334, -65.681629 -18.202334, -65.683629 -18.202334, -65.683629 -18.204334)'), 4326),
+    'Zona de protección del hábitat del cóndor andino y mirador natural',
+    8
+),
+
+-- 9. Área protegida para Huellas de Dinosaurio
+(
+    ST_SetSRID(ST_GeomFromText('POLYGON((-65.761791 -18.133090, -65.759791 -18.133090, -65.759791 -18.131090, -65.761791 -18.131090, -65.761791 -18.133090))'), 4326),
+    ST_SetSRID(ST_GeomFromText('LINESTRING(-65.761791 -18.133090, -65.759791 -18.133090, -65.759791 -18.131090, -65.761791 -18.131090, -65.761791 -18.133090)'), 4326),
+    'Área de máxima protección paleontológica con huellas de dinosaurios del Cretácico',
+    9
+),
+
+-- 10. Área protegida para Cementerio de Tortugas
+(
+    ST_SetSRID(ST_GeomFromText('POLYGON((-65.750869 -18.159616, -65.748869 -18.159616, -65.748869 -18.157616, -65.750869 -18.157616, -65.750869 -18.159616))'), 4326),
+    ST_SetSRID(ST_GeomFromText('LINESTRING(-65.750869 -18.159616, -65.748869 -18.159616, -65.748869 -18.157616, -65.750869 -18.157616, -65.750869 -18.159616)'), 4326),
+    'Zona de protección paleontológica con fósiles de tortugas prehistóricas',
+    10
+),
+
+-- 11. Área protegida para Carreras Pampa
+(
+    ST_SetSRID(ST_GeomFromText('POLYGON((-65.781088 -18.129729, -65.779088 -18.129729, -65.779088 -18.127729, -65.781088 -18.127729, -65.781088 -18.129729))'), 4326),
+    ST_SetSRID(ST_GeomFromText('LINESTRING(-65.781088 -18.129729, -65.779088 -18.129729, -65.779088 -18.127729, -65.781088 -18.127729, -65.781088 -18.129729)'), 4326),
+    'Área protegida con múltiples huellas de dinosaurios en planicie sedimentaria',
+    11
+),
+
+-- 12. Área protegida para Ciudad de Itas
+(
+    ST_SetSRID(ST_GeomFromText('POLYGON((-65.883478 -18.106812, -65.881478 -18.106812, -65.881478 -18.104812, -65.883478 -18.104812, -65.883478 -18.106812))'), 4326),
+    ST_SetSRID(ST_GeomFromText('LINESTRING(-65.883478 -18.106812, -65.881478 -18.106812, -65.881478 -18.104812, -65.883478 -18.104812, -65.883478 -18.106812)'), 4326),
+    'Zona de protección integral del laberinto rocoso y formaciones geológicas únicas',
+    12
+),
+
+-- 13. Área protegida para Cerro Llama Chaqui
+(
+    ST_SetSRID(ST_GeomFromText('POLYGON((-65.720722 -18.138778, -65.718722 -18.138778, -65.718722 -18.136778, -65.720722 -18.136778, -65.720722 -18.138778))'), 4326),
+    ST_SetSRID(ST_GeomFromText('LINESTRING(-65.720722 -18.138778, -65.718722 -18.138778, -65.718722 -18.136778, -65.720722 -18.136778, -65.720722 -18.138778)'), 4326),
+    'Área protegida del cerro con importancia cultural y arqueológica',
+    13
+),
+
+-- 14. Área protegida para Pinturas Rupestres
+(
+    ST_SetSRID(ST_GeomFromText('POLYGON((-65.885708 -18.109963, -65.883708 -18.109963, -65.883708 -18.107963, -65.885708 -18.107963, -65.885708 -18.109963))'), 4326),
+    ST_SetSRID(ST_GeomFromText('LINESTRING(-65.885708 -18.109963, -65.883708 -18.109963, -65.883708 -18.107963, -65.885708 -18.107963, -65.885708 -18.109963)'), 4326),
+    'Zona de protección arqueológica con arte rupestre precolombino',
+    14
+),
+
+-- 15. Área protegida para Chiflon Qaqa
+(
+    ST_SetSRID(ST_GeomFromText('POLYGON((-65.774674 -18.123293, -65.772674 -18.123293, -65.772674 -18.121293, -65.774674 -18.121293, -65.774674 -18.123293))'), 4326),
+    ST_SetSRID(ST_GeomFromText('LINESTRING(-65.774674 -18.123293, -65.772674 -18.123293, -65.772674 -18.121293, -65.774674 -18.121293, -65.774674 -18.123293)'), 4326),
+    'Área de protección del desfiladero y formaciones erosionadas únicas',
+    15
+),
+
+-- 16. Área protegida para Plaza Principal ToroToro
+(
+    ST_SetSRID(ST_GeomFromText('POLYGON((-65.763947 -18.134521, -65.761947 -18.134521, -65.761947 -18.132521, -65.763947 -18.132521, -65.763947 -18.134521))'), 4326),
+    ST_SetSRID(ST_GeomFromText('LINESTRING(-65.763947 -18.134521, -65.761947 -18.134521, -65.761947 -18.132521, -65.763947 -18.132521, -65.763947 -18.134521)'), 4326),
+    'Zona de protección del patrimonio cultural y arquitectónico del pueblo',
+    16
+);

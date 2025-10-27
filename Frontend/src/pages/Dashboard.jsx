@@ -180,6 +180,10 @@ export const Dashboard = () => {
           </Link>
           <br />
           <br />
+
+          <Link to={'/huellas3d'} style={{ ...styles.sidebarItem, ...styles.link }}>Huellas 3D</Link>
+          <br />
+          <br />
                   <button
           onClick={() => setDarkMode(!darkMode)}
           style={styles.darkButton}
