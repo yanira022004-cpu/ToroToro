@@ -91,3 +91,15 @@ export const trackToroToro = async (_req: Request, res: Response) => {
     return res.status(500).json({ message: "Error obteniendo tracks", error })
   }
 }
+
+export const getAllAtractivoTuristicoTipoRiesgoCategoria = async (_req: Request, res: Response) => {
+  try {
+    const result = await pool.query(
+      'SELECT at.id_atrac_turist AS id_atractivo, at.nombre AS nombre_atractivo, at.tipo_atractivo, at.estado, at.tiempo_visita, at.elevacion, at.longitud, at.latitud, tr.nivel AS nivel_riesgo, tr.descripcion AS descripcion_riesgo, c.nombre_categoria, c.descripcion AS descripcion_categoria FROM atractivo_turistico at INNER JOIN tipo_riesgo tr ON at.tipo_riesgo_id = tr.id_tipo_riesgo INNER JOIN categoria c ON at.categoria_id = c.id_categoria;'
+    )
+
+    return res.status(200).json(result.rows)
+  } catch (error) {
+    return res.status(500).json({ message: 'Error obteniendo atractivos turísticos con detalles', error })
+  }
+}

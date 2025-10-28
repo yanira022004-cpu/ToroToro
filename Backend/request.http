@@ -8,4 +8,4 @@ GET http://localhost:3333/api/atractivo_coords
 GET http://localhost:3333/api/track_toro_toro
 
 ###
-GET http://localhost:3333/api/area_prot
+GET http://localhost:3333/api/all
