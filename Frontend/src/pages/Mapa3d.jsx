@@ -15,6 +15,7 @@ export const Mapa3d = () => {
   const [localidades, setLocalidades] = useState([])
   const [poligTor, setPoligTor] = useState([])
   const [riosPrincipales, setRiosPrincipales] = useState([])
+  const [riosSecundarios, setRiosSecundarios] = useState([])
   const [mapLoaded, setMapLoaded] = useState(false)
   
   const [showServicios, setShowServicios] = useState(true)
@@ -24,10 +25,26 @@ export const Mapa3d = () => {
   const [showDepartamentos, setShowDepartamentos] = useState(true)
   const [showLocalidades, setShowLocalidades] = useState(true)
   const [showPoligTor, setShowPoligTor] = useState(true)
-  const [showRios, setShowRios] = useState(true)
+  const [showRiosPrincipales, setShowRiosPrincipales] = useState(true)
+  const [showRiosSecundarios, setShowRiosSecundarios] = useState(true)
 
   const coloresDepartamentos = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7']
   const coloresLocalidades = ['#FF9FF3', '#F368E0', '#FF9F43', '#FFCA3A', '#8AC926']
+
+  // Función para limpiar capas específicas
+  const cleanupLayer = (sourceId, layerIds) => {
+    if (!map.current) return
+    
+    layerIds.forEach(layerId => {
+      if (map.current.getLayer(layerId)) {
+        map.current.removeLayer(layerId)
+      }
+    })
+    
+    if (map.current.getSource(sourceId)) {
+      map.current.removeSource(sourceId)
+    }
+  }
 
   useEffect(() => {
     const fetchDepartamentos = async () => {
@@ -114,6 +131,16 @@ export const Mapa3d = () => {
       }
     }
 
+    const fetchRiosSecundarios = async () => {
+      try {
+        const res = await fetch("http://localhost:3333/api/rios_secundarios")
+        const data = await res.json()
+        setRiosSecundarios(data.features || [])
+      } catch (error) {
+        console.error("Error obteniendo ríos secundarios:", error)
+      }
+    }
+
     fetchDepartamentos()
     fetchLocalidades()
     fetchAreasProtegidas()
@@ -122,6 +149,7 @@ export const Mapa3d = () => {
     fetchTracks()
     fetchPoligTor()
     fetchRiosPrincipales()
+    fetchRiosSecundarios()
   }, [])
 
   useEffect(() => {
@@ -219,7 +247,8 @@ export const Mapa3d = () => {
       departamentos: ['departamentos-fill', 'departamentos-border'],
       localidades: ['localidades-layer', 'localidades-labels'],
       poligTor: ['polig-tor-fill', 'polig-tor-border'],
-      rios: ['rios-layer', 'rios-labels']
+      riosPrincipales: ['rios-principales-layer', 'rios-principales-labels'],
+      riosSecundarios: ['rios-secundarios-layer', 'rios-secundarios-labels']
     }
 
     layers[layerType]?.forEach(layerId => {
@@ -240,32 +269,31 @@ export const Mapa3d = () => {
   useEffect(() => { toggleLayer('departamentos', showDepartamentos) }, [showDepartamentos, mapLoaded])
   useEffect(() => { toggleLayer('localidades', showLocalidades) }, [showLocalidades, mapLoaded])
   useEffect(() => { toggleLayer('poligTor', showPoligTor) }, [showPoligTor, mapLoaded])
-  useEffect(() => { toggleLayer('rios', showRios) }, [showRios, mapLoaded])
+  useEffect(() => { toggleLayer('riosPrincipales', showRiosPrincipales) }, [showRiosPrincipales, mapLoaded])
+  useEffect(() => { toggleLayer('riosSecundarios', showRiosSecundarios) }, [showRiosSecundarios, mapLoaded])
 
   // Capa de Ríos Principales
   useEffect(() => {
     if (!map.current || !riosPrincipales.length || !mapLoaded) return
 
-    const addRiosToMap = () => {
-      if (map.current.getSource('rios')) {
-        map.current.removeSource('rios')
-      }
+    const addRiosPrincipalesToMap = () => {
+      cleanupLayer('rios-principales', ['rios-principales-layer', 'rios-principales-labels'])
 
-      const riosGeoJSON = {
+      const riosPrincipalesGeoJSON = {
         type: 'FeatureCollection',
         features: riosPrincipales
       }
 
-      map.current.addSource('rios', {
+      map.current.addSource('rios-principales', {
         type: 'geojson',
-        data: riosGeoJSON
+        data: riosPrincipalesGeoJSON
       })
 
       map.current.addLayer({
-        id: 'rios-layer',
+        id: 'rios-principales-layer',
         type: 'line',
-        source: 'rios',
-        layout: { 'visibility': showRios ? 'visible' : 'none' },
+        source: 'rios-principales',
+        layout: { 'visibility': showRiosPrincipales ? 'visible' : 'none' },
         paint: {
           'line-color': '#1e40af',
           'line-width': 3,
@@ -274,11 +302,11 @@ export const Mapa3d = () => {
       })
 
       map.current.addLayer({
-        id: 'rios-labels',
+        id: 'rios-principales-labels',
         type: 'symbol',
-        source: 'rios',
+        source: 'rios-principales',
         layout: {
-          'visibility': showRios ? 'visible' : 'none',
+          'visibility': showRiosPrincipales ? 'visible' : 'none',
           'text-field': ['get', 'nombre'],
           'text-size': 12,
           'text-offset': [0, 0],
@@ -294,19 +322,85 @@ export const Mapa3d = () => {
     }
 
     if (map.current.isStyleLoaded()) {
-      addRiosToMap()
+      addRiosPrincipalesToMap()
     } else {
-      map.current.once("idle", addRiosToMap)
+      map.current.once("idle", addRiosPrincipalesToMap)
     }
-  }, [riosPrincipales, mapLoaded, showRios])
+
+    return () => {
+      if (map.current) {
+        cleanupLayer('rios-principales', ['rios-principales-layer', 'rios-principales-labels'])
+      }
+    }
+  }, [riosPrincipales, mapLoaded, showRiosPrincipales])
+
+  // Capa de Ríos Secundarios
+  useEffect(() => {
+    if (!map.current || !riosSecundarios.length || !mapLoaded) return
+
+    const addRiosSecundariosToMap = () => {
+      cleanupLayer('rios-secundarios', ['rios-secundarios-layer', 'rios-secundarios-labels'])
+
+      const riosSecundariosGeoJSON = {
+        type: 'FeatureCollection',
+        features: riosSecundarios
+      }
+
+      map.current.addSource('rios-secundarios', {
+        type: 'geojson',
+        data: riosSecundariosGeoJSON
+      })
+
+      map.current.addLayer({
+        id: 'rios-secundarios-layer',
+        type: 'line',
+        source: 'rios-secundarios',
+        layout: { 'visibility': showRiosSecundarios ? 'visible' : 'none' },
+        paint: {
+          'line-color': '#1e40af',
+          'line-width': 2,
+          'line-opacity': 0.7
+        }
+      })
+
+      map.current.addLayer({
+        id: 'rios-secundarios-labels',
+        type: 'symbol',
+        source: 'rios-secundarios',
+        layout: {
+          'visibility': showRiosSecundarios ? 'visible' : 'none',
+          'text-field': ['get', 'nombre'],
+          'text-size': 10,
+          'text-offset': [0, 0],
+          'text-anchor': 'center',
+          'text-optional': true
+        },
+        paint: {
+          'text-color': '#60a5fa',
+          'text-halo-color': '#ffffff',
+          'text-halo-width': 1
+        }
+      })
+    }
+
+    if (map.current.isStyleLoaded()) {
+      addRiosSecundariosToMap()
+    } else {
+      map.current.once("idle", addRiosSecundariosToMap)
+    }
+
+    return () => {
+      if (map.current) {
+        cleanupLayer('rios-secundarios', ['rios-secundarios-layer', 'rios-secundarios-labels'])
+      }
+    }
+  }, [riosSecundarios, mapLoaded, showRiosSecundarios])
 
   useEffect(() => {
     if (!map.current || !poligTor.length || !mapLoaded) return
 
     const addPoligTorToMap = () => {
-      if (map.current.getSource('polig-tor')) {
-        map.current.removeSource('polig-tor')
-      }
+      cleanupLayer('polig-tor', ['polig-tor-fill', 'polig-tor-border'])
 
       const poligTorGeoJSON = {
         type: 'FeatureCollection',
@@ -348,15 +442,19 @@ export const Mapa3d = () => {
     } else {
       map.current.once("idle", addPoligTorToMap)
     }
+
+    return () => {
+      if (map.current) {
+        cleanupLayer('polig-tor', ['polig-tor-fill', 'polig-tor-border'])
+      }
+    }
   }, [poligTor, mapLoaded, showPoligTor])
 
   useEffect(() => {
     if (!map.current || !departamentos.length || !mapLoaded) return
 
     const addDepartamentosToMap = () => {
-      if (map.current.getSource('departamentos')) {
-        map.current.removeSource('departamentos')
-      }
+      cleanupLayer('departamentos', ['departamentos-fill', 'departamentos-border'])
 
       const departamentosGeoJSON = {
         type: 'FeatureCollection',
@@ -405,15 +503,19 @@ export const Mapa3d = () => {
     } else {
       map.current.once("idle", addDepartamentosToMap)
     }
+
+    return () => {
+      if (map.current) {
+        cleanupLayer('departamentos', ['departamentos-fill', 'departamentos-border'])
+      }
+    }
   }, [departamentos, mapLoaded, showDepartamentos])
 
   useEffect(() => {
     if (!map.current || !localidades.length || !mapLoaded) return
 
     const addLocalidadesToMap = () => {
-      if (map.current.getSource('localidades')) {
-        map.current.removeSource('localidades')
-      }
+      cleanupLayer('localidades', ['localidades-layer', 'localidades-labels'])
 
       const localidadesGeoJSON = {
         type: 'FeatureCollection',
@@ -473,15 +575,19 @@ export const Mapa3d = () => {
     } else {
       map.current.once("idle", addLocalidadesToMap)
     }
+
+    return () => {
+      if (map.current) {
+        cleanupLayer('localidades', ['localidades-layer', 'localidades-labels'])
+      }
+    }
   }, [localidades, mapLoaded, showLocalidades])
 
   useEffect(() => {
     if (!map.current || !tracks.features || tracks.features.length === 0 || !mapLoaded) return
 
     const addTracksToMap = () => {
-      if (map.current.getSource("tracks")) {
-        map.current.removeSource("tracks")
-      }
+      cleanupLayer('tracks', ['tracks-layer', 'tracks-glow'])
 
       map.current.addSource("tracks", {
         type: "geojson",
@@ -519,15 +625,19 @@ export const Mapa3d = () => {
     } else {
       map.current.once("idle", addTracksToMap)
     }
+
+    return () => {
+      if (map.current) {
+        cleanupLayer('tracks', ['tracks-layer', 'tracks-glow'])
+      }
+    }
   }, [tracks, mapLoaded, showTracks])
 
   useEffect(() => {
     if (!map.current || !areasProtegidas.length || !mapLoaded) return
 
     const addAreasProtegidasToMap = () => {
-      if (map.current.getSource('areas')) {
-        map.current.removeSource('areas')
-      }
+      cleanupLayer('areas', ['areas-3d', 'areas-fill', 'areas-border'])
 
       const areasGeoJSON = {
         type: 'FeatureCollection',
@@ -589,15 +699,19 @@ export const Mapa3d = () => {
     } else {
       map.current.once('idle', addAreasProtegidasToMap)
     }
+
+    return () => {
+      if (map.current) {
+        cleanupLayer('areas', ['areas-3d', 'areas-fill', 'areas-border'])
+      }
+    }
   }, [areasProtegidas, mapLoaded, showAreas])
 
   useEffect(() => {
     if (!map.current || !servicios.length || !mapLoaded) return
 
     const addServiciosToMap = () => {
-      if (map.current.getSource('servicios')) {
-        map.current.removeSource('servicios')
-      }
+      cleanupLayer('servicios', ['servicios-layer', 'servicios-labels'])
 
       const serviciosGeoJSON = {
         type: 'FeatureCollection',
@@ -663,15 +777,19 @@ export const Mapa3d = () => {
     } else {
       map.current.once('idle', addServiciosToMap)
     }
+
+    return () => {
+      if (map.current) {
+        cleanupLayer('servicios', ['servicios-layer', 'servicios-labels'])
+      }
+    }
   }, [servicios, mapLoaded, showServicios])
 
   useEffect(() => {
     if (!map.current || !atractivos.length || !mapLoaded) return
 
     const addAtractivosToMap = () => {
-      if (map.current.getSource('atractivos')) {
-        map.current.removeSource('atractivos')
-      }
+      cleanupLayer('atractivos', ['atractivos-layer', 'atractivos-labels'])
 
       const atractivosGeoJSON = {
         type: 'FeatureCollection',
@@ -736,6 +854,12 @@ export const Mapa3d = () => {
       addAtractivosToMap()
     } else {
       map.current.once('idle', addAtractivosToMap)
+    }
+
+    return () => {
+      if (map.current) {
+        cleanupLayer('atractivos', ['atractivos-layer', 'atractivos-labels'])
+      }
     }
   }, [atractivos, mapLoaded, showAtractivos])
 
@@ -803,8 +927,11 @@ export const Mapa3d = () => {
         <button onClick={() => setShowPoligTor(!showPoligTor)} style={toggleButtonStyles(showPoligTor)}>
           <span>📍</span> Polígono Toro Toro {showPoligTor ? '✓' : '✗'}
         </button>
-        <button onClick={() => setShowRios(!showRios)} style={toggleButtonStyles(showRios)}>
-          <span>🌊</span> Ríos Principales {showRios ? '✓' : '✗'}
+        <button onClick={() => setShowRiosPrincipales(!showRiosPrincipales)} style={toggleButtonStyles(showRiosPrincipales)}>
+          <span>🌊</span> Ríos Principales {showRiosPrincipales ? '✓' : '✗'}
+        </button>
+        <button onClick={() => setShowRiosSecundarios(!showRiosSecundarios)} style={toggleButtonStyles(showRiosSecundarios)}>
+          <span>💧</span> Ríos Secundarios {showRiosSecundarios ? '✓' : '✗'}
         </button>
       </div>
     </div>
