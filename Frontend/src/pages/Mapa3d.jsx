@@ -11,16 +11,49 @@ export const Mapa3d = () => {
   const [atractivos, setAtractivos] = useState([])
   const [tracks, setTracks] = useState([])
   const [areasProtegidas, setAreasProtegidas] = useState([])
-  const [servicioSeleccionado, setServicioSeleccionado] = useState(null)
-  const [atractivoSeleccionado, setAtractivoSeleccionado] = useState(null)
-  const [areaSeleccionada, setAreaSeleccionada] = useState(null)
-  const [showPopup, setShowPopup] = useState(false)
-  const [popupType, setPopupType] = useState('') // 'servicio', 'atractivo' o 'area'
-  const popupRef = useRef(null)
+  const [departamentos, setDepartamentos] = useState([])
+  const [localidades, setLocalidades] = useState([])
+  const [poligTor, setPoligTor] = useState([])
+  const [riosPrincipales, setRiosPrincipales] = useState([])
   const [mapLoaded, setMapLoaded] = useState(false)
+  
+  const [showServicios, setShowServicios] = useState(true)
+  const [showAtractivos, setShowAtractivos] = useState(true)
+  const [showTracks, setShowTracks] = useState(true)
+  const [showAreas, setShowAreas] = useState(true)
+  const [showDepartamentos, setShowDepartamentos] = useState(true)
+  const [showLocalidades, setShowLocalidades] = useState(true)
+  const [showPoligTor, setShowPoligTor] = useState(true)
+  const [showRios, setShowRios] = useState(true)
 
-  // Fetch para áreas protegidas
+  const coloresDepartamentos = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7']
+  const coloresLocalidades = ['#FF9FF3', '#F368E0', '#FF9F43', '#FFCA3A', '#8AC926']
+
   useEffect(() => {
+    const fetchDepartamentos = async () => {
+      try {
+        const res = await fetch("http://localhost:3333/api/departamentos")
+        const data = await res.json()
+        if (data.type === "FeatureCollection" && data.features) {
+          setDepartamentos(data.features)
+        }
+      } catch (error) {
+        console.error("Error obteniendo departamentos:", error)
+      }
+    }
+
+    const fetchLocalidades = async () => {
+      try {
+        const res = await fetch("http://localhost:3333/api/localidades")
+        const data = await res.json()
+        if (data.type === "FeatureCollection" && data.features) {
+          setLocalidades(data.features)
+        }
+      } catch (error) {
+        console.error("Error obteniendo localidades:", error)
+      }
+    }
+
     const fetchAreasProtegidas = async () => {
       try {
         const res = await fetch("http://localhost:3333/api/area_prot")
@@ -31,10 +64,6 @@ export const Mapa3d = () => {
       }
     }
 
-    fetchAreasProtegidas()
-  }, [])
-
-  useEffect(() => {
     const fetchAtractivos = async () => {
       try {
         const res = await fetch("http://localhost:3333/api/atractivo_coords")
@@ -45,10 +74,6 @@ export const Mapa3d = () => {
       }
     }
 
-    fetchAtractivos()
-  }, [])
-
-  useEffect(() => {
     const fetchServicios = async () => {
       try {
         const res = await fetch("http://localhost:3333/api/servicio_coords")
@@ -59,10 +84,6 @@ export const Mapa3d = () => {
       }
     }
 
-    fetchServicios()
-  }, [])
-
-  useEffect(() => {
     const fetchTracks = async () => {
       try {
         const res = await fetch("http://localhost:3333/api/track_toro_toro")
@@ -73,7 +94,34 @@ export const Mapa3d = () => {
       }
     }
 
+    const fetchPoligTor = async () => {
+      try {
+        const res = await fetch("http://localhost:3333/api/polig_tor")
+        const data = await res.json()
+        setPoligTor(data.features || [])
+      } catch (error) {
+        console.error("Error obteniendo polígono Toro Toro:", error)
+      }
+    }
+
+    const fetchRiosPrincipales = async () => {
+      try {
+        const res = await fetch("http://localhost:3333/api/rios_principales")
+        const data = await res.json()
+        setRiosPrincipales(data.features || [])
+      } catch (error) {
+        console.error("Error obteniendo ríos principales:", error)
+      }
+    }
+
+    fetchDepartamentos()
+    fetchLocalidades()
+    fetchAreasProtegidas()
+    fetchAtractivos()
+    fetchServicios()
     fetchTracks()
+    fetchPoligTor()
+    fetchRiosPrincipales()
   }, [])
 
   useEffect(() => {
@@ -92,7 +140,6 @@ export const Mapa3d = () => {
     map.current.on("load", () => {
       setMapLoaded(true)
       
-      // Cargar el sprite personalizado con el ícono de casa
       map.current.loadImage(
         'https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png',
         (error, image) => {
@@ -161,18 +208,277 @@ export const Mapa3d = () => {
     })
   }, [])
 
-  // Primero: Agregar tracks
+  const toggleLayer = (layerType, isVisible) => {
+    if (!map.current || !mapLoaded) return
+
+    const layers = {
+      servicios: ['servicios-layer', 'servicios-labels'],
+      atractivos: ['atractivos-layer', 'atractivos-labels'],
+      tracks: ['tracks-layer', 'tracks-glow'],
+      areas: ['areas-3d', 'areas-fill', 'areas-border'],
+      departamentos: ['departamentos-fill', 'departamentos-border'],
+      localidades: ['localidades-layer', 'localidades-labels'],
+      poligTor: ['polig-tor-fill', 'polig-tor-border'],
+      rios: ['rios-layer', 'rios-labels']
+    }
+
+    layers[layerType]?.forEach(layerId => {
+      if (map.current.getLayer(layerId)) {
+        map.current.setLayoutProperty(
+          layerId,
+          'visibility',
+          isVisible ? 'visible' : 'none'
+        )
+      }
+    })
+  }
+
+  useEffect(() => { toggleLayer('servicios', showServicios) }, [showServicios, mapLoaded])
+  useEffect(() => { toggleLayer('atractivos', showAtractivos) }, [showAtractivos, mapLoaded])
+  useEffect(() => { toggleLayer('tracks', showTracks) }, [showTracks, mapLoaded])
+  useEffect(() => { toggleLayer('areas', showAreas) }, [showAreas, mapLoaded])
+  useEffect(() => { toggleLayer('departamentos', showDepartamentos) }, [showDepartamentos, mapLoaded])
+  useEffect(() => { toggleLayer('localidades', showLocalidades) }, [showLocalidades, mapLoaded])
+  useEffect(() => { toggleLayer('poligTor', showPoligTor) }, [showPoligTor, mapLoaded])
+  useEffect(() => { toggleLayer('rios', showRios) }, [showRios, mapLoaded])
+
+  // Capa de Ríos Principales
+  useEffect(() => {
+    if (!map.current || !riosPrincipales.length || !mapLoaded) return
+
+    const addRiosToMap = () => {
+      if (map.current.getSource('rios')) {
+        map.current.removeSource('rios')
+      }
+
+      const riosGeoJSON = {
+        type: 'FeatureCollection',
+        features: riosPrincipales
+      }
+
+      map.current.addSource('rios', {
+        type: 'geojson',
+        data: riosGeoJSON
+      })
+
+      map.current.addLayer({
+        id: 'rios-layer',
+        type: 'line',
+        source: 'rios',
+        layout: { 'visibility': showRios ? 'visible' : 'none' },
+        paint: {
+          'line-color': '#1e40af',
+          'line-width': 3,
+          'line-opacity': 0.8
+        }
+      })
+
+      map.current.addLayer({
+        id: 'rios-labels',
+        type: 'symbol',
+        source: 'rios',
+        layout: {
+          'visibility': showRios ? 'visible' : 'none',
+          'text-field': ['get', 'nombre'],
+          'text-size': 12,
+          'text-offset': [0, 0],
+          'text-anchor': 'center',
+          'text-optional': true
+        },
+        paint: {
+          'text-color': '#1e40af',
+          'text-halo-color': '#ffffff',
+          'text-halo-width': 1
+        }
+      })
+    }
+
+    if (map.current.isStyleLoaded()) {
+      addRiosToMap()
+    } else {
+      map.current.once("idle", addRiosToMap)
+    }
+  }, [riosPrincipales, mapLoaded, showRios])
+
+  useEffect(() => {
+    if (!map.current || !poligTor.length || !mapLoaded) return
+
+    const addPoligTorToMap = () => {
+      if (map.current.getSource('polig-tor')) {
+        map.current.removeSource('polig-tor')
+      }
+
+      const poligTorGeoJSON = {
+        type: 'FeatureCollection',
+        features: poligTor
+      }
+
+      map.current.addSource('polig-tor', {
+        type: 'geojson',
+        data: poligTorGeoJSON
+      })
+
+      map.current.addLayer({
+        id: 'polig-tor-fill',
+        type: 'fill',
+        source: 'polig-tor',
+        layout: { 'visibility': showPoligTor ? 'visible' : 'none' },
+        paint: {
+          'fill-color': '#9333ea',
+          'fill-opacity': 0.3,
+          'fill-outline-color': '#7c3aed'
+        }
+      })
+
+      map.current.addLayer({
+        id: 'polig-tor-border',
+        type: 'line',
+        source: 'polig-tor',
+        layout: { 'visibility': showPoligTor ? 'visible' : 'none' },
+        paint: {
+          'line-color': '#7c3aed',
+          'line-width': 3,
+          'line-opacity': 0.8
+        }
+      })
+    }
+
+    if (map.current.isStyleLoaded()) {
+      addPoligTorToMap()
+    } else {
+      map.current.once("idle", addPoligTorToMap)
+    }
+  }, [poligTor, mapLoaded, showPoligTor])
+
+  useEffect(() => {
+    if (!map.current || !departamentos.length || !mapLoaded) return
+
+    const addDepartamentosToMap = () => {
+      if (map.current.getSource('departamentos')) {
+        map.current.removeSource('departamentos')
+      }
+
+      const departamentosGeoJSON = {
+        type: 'FeatureCollection',
+        features: departamentos.map((feature, index) => ({
+          ...feature,
+          properties: {
+            ...feature.properties,
+            color: coloresDepartamentos[index % coloresDepartamentos.length],
+            nombre: feature.properties.nombre || `Departamento ${index + 1}`
+          }
+        }))
+      }
+
+      map.current.addSource('departamentos', {
+        type: 'geojson',
+        data: departamentosGeoJSON
+      })
+
+      map.current.addLayer({
+        id: 'departamentos-fill',
+        type: 'fill',
+        source: 'departamentos',
+        layout: { 'visibility': showDepartamentos ? 'visible' : 'none' },
+        paint: {
+          'fill-color': ['get', 'color'],
+          'fill-opacity': 0.6,
+          'fill-outline-color': '#ffffff'
+        }
+      })
+
+      map.current.addLayer({
+        id: 'departamentos-border',
+        type: 'line',
+        source: 'departamentos',
+        layout: { 'visibility': showDepartamentos ? 'visible' : 'none' },
+        paint: {
+          'line-color': '#ffffff',
+          'line-width': 2,
+          'line-opacity': 0.8
+        }
+      })
+    }
+
+    if (map.current.isStyleLoaded()) {
+      addDepartamentosToMap()
+    } else {
+      map.current.once("idle", addDepartamentosToMap)
+    }
+  }, [departamentos, mapLoaded, showDepartamentos])
+
+  useEffect(() => {
+    if (!map.current || !localidades.length || !mapLoaded) return
+
+    const addLocalidadesToMap = () => {
+      if (map.current.getSource('localidades')) {
+        map.current.removeSource('localidades')
+      }
+
+      const localidadesGeoJSON = {
+        type: 'FeatureCollection',
+        features: localidades.map((feature, index) => ({
+          ...feature,
+          properties: {
+            ...feature.properties,
+            color: coloresLocalidades[index % coloresLocalidades.length],
+            nombre: feature.properties.nombre || `Localidad ${feature.properties.id || index + 1}`,
+            categoria: feature.properties.categoria || 'Sin categoría',
+            subcategoria: feature.properties.subcateg || 'Sin subcategoría'
+          }
+        }))
+      }
+
+      map.current.addSource('localidades', {
+        type: 'geojson',
+        data: localidadesGeoJSON
+      })
+
+      map.current.addLayer({
+        id: 'localidades-layer',
+        type: 'circle',
+        source: 'localidades',
+        layout: { 'visibility': showLocalidades ? 'visible' : 'none' },
+        paint: {
+          'circle-radius': 10,
+          'circle-color': ['get', 'color'],
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#ffffff',
+          'circle-opacity': 0.8
+        }
+      })
+
+      map.current.addLayer({
+        id: 'localidades-labels',
+        type: 'symbol',
+        source: 'localidades',
+        layout: {
+          'visibility': showLocalidades ? 'visible' : 'none',
+          'text-field': ['get', 'nombre'],
+          'text-size': 14,
+          'text-offset': [0, 1.5],
+          'text-anchor': 'top',
+          'text-optional': true
+        },
+        paint: {
+          'text-color': '#854d0e',
+          'text-halo-color': '#ffffff',
+          'text-halo-width': 2
+        }
+      })
+    }
+
+    if (map.current.isStyleLoaded()) {
+      addLocalidadesToMap()
+    } else {
+      map.current.once("idle", addLocalidadesToMap)
+    }
+  }, [localidades, mapLoaded, showLocalidades])
+
   useEffect(() => {
     if (!map.current || !tracks.features || tracks.features.length === 0 || !mapLoaded) return
 
     const addTracksToMap = () => {
-      // Remover capas existentes si las hay
-      if (map.current.getLayer("tracks-layer")) {
-        map.current.removeLayer("tracks-layer")
-      }
-      if (map.current.getLayer("tracks-glow")) {
-        map.current.removeLayer("tracks-glow")
-      }
       if (map.current.getSource("tracks")) {
         map.current.removeSource("tracks")
       }
@@ -186,31 +492,24 @@ export const Mapa3d = () => {
         id: "tracks-layer",
         type: "line",
         source: "tracks",
+        layout: { 'visibility': showTracks ? 'visible' : 'none' },
         paint: {
           "line-color": "#ff0000",
           "line-width": 5,
           "line-opacity": 0.9,
-          "line-offset": 1
-        },
-        layout: {
-          "line-join": "round",
-          "line-cap": "round",
         },
       })
 
       map.current.addLayer({
         id: "tracks-glow",
-        type: "line",
+        type: 'line',
         source: "tracks",
+        layout: { 'visibility': showTracks ? 'visible' : 'none' },
         paint: {
           "line-color": "#3b82f6",
           "line-width": 8,
           "line-opacity": 0.3,
           "line-blur": 2,
-        },
-        layout: {
-          "line-join": "round",
-          "line-cap": "round",
         },
       })
     }
@@ -220,28 +519,16 @@ export const Mapa3d = () => {
     } else {
       map.current.once("idle", addTracksToMap)
     }
-  }, [tracks, mapLoaded])
+  }, [tracks, mapLoaded, showTracks])
 
-  // Segundo: Agregar áreas protegidas
   useEffect(() => {
     if (!map.current || !areasProtegidas.length || !mapLoaded) return
 
     const addAreasProtegidasToMap = () => {
-      // Remover capas existentes si las hay
-      if (map.current.getLayer('areas-3d')) {
-        map.current.removeLayer('areas-3d')
-      }
-      if (map.current.getLayer('areas-fill')) {
-        map.current.removeLayer('areas-fill')
-      }
-      if (map.current.getLayer('areas-border')) {
-        map.current.removeLayer('areas-border')
-      }
       if (map.current.getSource('areas')) {
         map.current.removeSource('areas')
       }
 
-      // Crear GeoJSON para áreas protegidas
       const areasGeoJSON = {
         type: 'FeatureCollection',
         features: areasProtegidas.map(area => ({
@@ -250,61 +537,49 @@ export const Mapa3d = () => {
           properties: {
             id: area.id_area_prot,
             descripcion: area.descripcion,
-            atractivo_turistico_id: area.atractivo_turistico_id,
-            height: 50,
-            base_height: 0
+            atractivo_turistico_id: area.atractivo_turistico_id
           }
         }))
       }
 
-      // Agregar fuente
       map.current.addSource('areas', {
         type: 'geojson',
         data: areasGeoJSON
       })
 
-      // Capa 3D para áreas protegidas (extrusión)
       map.current.addLayer({
         id: 'areas-3d',
         type: 'fill-extrusion',
         source: 'areas',
+        layout: { 'visibility': showAreas ? 'visible' : 'none' },
         paint: {
           'fill-extrusion-color': '#8b5cf6',
-          'fill-extrusion-height': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            12, 10,
-            15, 30,
-            18, 50
-          ],
+          'fill-extrusion-height': 50,
           'fill-extrusion-base': 0,
           'fill-extrusion-opacity': 0.4,
-          'fill-extrusion-vertical-gradient': false
         }
       })
 
-      // Capa de relleno para áreas
       map.current.addLayer({
         id: 'areas-fill',
         type: 'fill',
         source: 'areas',
+        layout: { 'visibility': showAreas ? 'visible' : 'none' },
         paint: {
           'fill-color': '#8b5cf6',
           'fill-opacity': 0.1
         }
       })
 
-      // Capa de borde para áreas
       map.current.addLayer({
         id: 'areas-border',
         type: 'line',
         source: 'areas',
+        layout: { 'visibility': showAreas ? 'visible' : 'none' },
         paint: {
           'line-color': '#7c3aed',
           'line-width': 3,
           'line-opacity': 0.8,
-          'line-dasharray': [2, 2]
         }
       })
     }
@@ -314,20 +589,12 @@ export const Mapa3d = () => {
     } else {
       map.current.once('idle', addAreasProtegidasToMap)
     }
-  }, [areasProtegidas, mapLoaded])
+  }, [areasProtegidas, mapLoaded, showAreas])
 
-  // Tercero: Agregar servicios
   useEffect(() => {
     if (!map.current || !servicios.length || !mapLoaded) return
 
     const addServiciosToMap = () => {
-      // Remover capas existentes si las hay
-      if (map.current.getLayer('servicios-layer')) {
-        map.current.removeLayer('servicios-layer')
-      }
-      if (map.current.getLayer('servicios-labels')) {
-        map.current.removeLayer('servicios-labels')
-      }
       if (map.current.getSource('servicios')) {
         map.current.removeSource('servicios')
       }
@@ -358,30 +625,28 @@ export const Mapa3d = () => {
         data: serviciosGeoJSON
       })
 
-      // Usar símbolos con ícono de casa
       map.current.addLayer({
         id: 'servicios-layer',
         type: 'symbol',
         source: 'servicios',
         layout: {
+          'visibility': showServicios ? 'visible' : 'none',
           'icon-image': 'custom-marker',
-          'icon-size': 0.5,
+          'icon-size': 0.6,
           'icon-allow-overlap': true
         },
-        paint: {
-          'icon-opacity': 0.9
-        }
+        paint: { 'icon-opacity': 0.9 }
       })
 
-      // Etiquetas de servicios
       map.current.addLayer({
         id: 'servicios-labels',
         type: 'symbol',
         source: 'servicios',
         layout: {
+          'visibility': showServicios ? 'visible' : 'none',
           'text-field': ['get', 'nombre'],
-          'text-size': 12,
-          'text-offset': [0, 1.2],
+          'text-size': 14,
+          'text-offset': [0, 1.5],
           'text-anchor': 'top',
           'text-optional': true
         },
@@ -398,20 +663,12 @@ export const Mapa3d = () => {
     } else {
       map.current.once('idle', addServiciosToMap)
     }
-  }, [servicios, mapLoaded])
+  }, [servicios, mapLoaded, showServicios])
 
-  // Cuarto: Agregar atractivos (últimos para que queden encima)
   useEffect(() => {
     if (!map.current || !atractivos.length || !mapLoaded) return
 
     const addAtractivosToMap = () => {
-      // Remover capas existentes si las hay
-      if (map.current.getLayer('atractivos-layer')) {
-        map.current.removeLayer('atractivos-layer')
-      }
-      if (map.current.getLayer('atractivos-labels')) {
-        map.current.removeLayer('atractivos-labels')
-      }
       if (map.current.getSource('atractivos')) {
         map.current.removeSource('atractivos')
       }
@@ -442,13 +699,13 @@ export const Mapa3d = () => {
         data: atractivosGeoJSON
       })
 
-      // Capa de círculos para atractivos
       map.current.addLayer({
         id: 'atractivos-layer',
         type: 'circle',
         source: 'atractivos',
+        layout: { 'visibility': showAtractivos ? 'visible' : 'none' },
         paint: {
-          'circle-radius': 10,
+          'circle-radius': 12,
           'circle-color': '#10b981',
           'circle-stroke-width': 2,
           'circle-stroke-color': '#ffffff',
@@ -456,15 +713,15 @@ export const Mapa3d = () => {
         }
       })
 
-      // Etiquetas de atractivos
       map.current.addLayer({
         id: 'atractivos-labels',
         type: 'symbol',
         source: 'atractivos',
         layout: {
+          'visibility': showAtractivos ? 'visible' : 'none',
           'text-field': ['get', 'nombre'],
-          'text-size': 12,
-          'text-offset': [0, 2],
+          'text-size': 14,
+          'text-offset': [0, 2.2],
           'text-anchor': 'top'
         },
         paint: {
@@ -480,398 +737,76 @@ export const Mapa3d = () => {
     } else {
       map.current.once('idle', addAtractivosToMap)
     }
-  }, [atractivos, mapLoaded])
+  }, [atractivos, mapLoaded, showAtractivos])
 
-  // Configurar eventos una vez que todas las capas estén cargadas
-  useEffect(() => {
-    if (!map.current || !mapLoaded) return
-
-    const setupMapEvents = () => {
-      // Eventos para servicios
-      map.current.on('mouseenter', 'servicios-layer', () => {
-        map.current.getCanvas().style.cursor = 'pointer'
-        map.current.setPaintProperty('servicios-layer', 'icon-opacity', 1)
-      })
-
-      map.current.on('mouseleave', 'servicios-layer', () => {
-        map.current.getCanvas().style.cursor = ''
-        map.current.setPaintProperty('servicios-layer', 'icon-opacity', 0.9)
-      })
-
-      map.current.on('click', 'servicios-layer', (e) => {
-        const feature = e.features[0]
-        if (feature) {
-          const servicio = servicios.find(s => s.id_servicio === feature.properties.id)
-          if (servicio) {
-            setServicioSeleccionado(servicio)
-            setAtractivoSeleccionado(null)
-            setAreaSeleccionada(null)
-            setPopupType('servicio')
-            setShowPopup(true)
-          }
-        }
-      })
-
-      // Eventos para atractivos
-      map.current.on('mouseenter', 'atractivos-layer', () => {
-        map.current.getCanvas().style.cursor = 'pointer'
-        map.current.setPaintProperty('atractivos-layer', 'circle-color', '#059669')
-      })
-
-      map.current.on('mouseleave', 'atractivos-layer', () => {
-        map.current.getCanvas().style.cursor = ''
-        map.current.setPaintProperty('atractivos-layer', 'circle-color', '#10b981')
-      })
-
-      map.current.on('click', 'atractivos-layer', (e) => {
-        const feature = e.features[0]
-        if (feature) {
-          const atractivo = atractivos.find(a => a.id_atrac_turist === feature.properties.id)
-          if (atractivo) {
-            setAtractivoSeleccionado(atractivo)
-            setServicioSeleccionado(null)
-            setAreaSeleccionada(null)
-            setPopupType('atractivo')
-            setShowPopup(true)
-          }
-        }
-      })
-
-      // Eventos para áreas protegidas
-      map.current.on('mouseenter', 'areas-3d', () => {
-        map.current.getCanvas().style.cursor = 'pointer'
-        map.current.setPaintProperty('areas-3d', 'fill-extrusion-opacity', 0.7)
-        map.current.setPaintProperty('areas-3d', 'fill-extrusion-color', '#7c3aed')
-        map.current.setPaintProperty('areas-border', 'line-width', 4)
-      })
-
-      map.current.on('mouseleave', 'areas-3d', () => {
-        map.current.getCanvas().style.cursor = ''
-        map.current.setPaintProperty('areas-3d', 'fill-extrusion-opacity', 0.4)
-        map.current.setPaintProperty('areas-3d', 'fill-extrusion-color', '#8b5cf6')
-        map.current.setPaintProperty('areas-border', 'line-width', 3)
-      })
-
-      map.current.on('click', 'areas-3d', (e) => {
-        const feature = e.features[0]
-        if (feature) {
-          const area = areasProtegidas.find(a => a.id_area_prot === feature.properties.id)
-          if (area) {
-            const atractivoAsociado = atractivos.find(a => a.id_atrac_turist === area.atractivo_turistico_id)
-            setAreaSeleccionada({
-              ...area,
-              nombre_atractivo: atractivoAsociado ? atractivoAsociado.nombre : null
-            })
-            setServicioSeleccionado(null)
-            setAtractivoSeleccionado(null)
-            setPopupType('area')
-            setShowPopup(true)
-          }
-        }
-      })
-    }
-
-    // Esperar a que el mapa esté completamente cargado
-    if (map.current.isStyleLoaded()) {
-      setupMapEvents()
-    } else {
-      map.current.once('idle', setupMapEvents)
-    }
-  }, [mapLoaded, servicios, atractivos, areasProtegidas])
-
-  const ocultarInfo = () => {
-    setShowPopup(false)
-    setServicioSeleccionado(null)
-    setAtractivoSeleccionado(null)
-    setAreaSeleccionada(null)
-    setPopupType('')
+  const controlStyles = {
+    position: 'absolute',
+    top: '20px',
+    left: '20px',
+    background: 'white',
+    borderRadius: '10px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+    padding: '15px',
+    zIndex: 1000,
+    minWidth: '220px'
   }
 
-  // Función para obtener color según el estado
-  const getEstadoColor = (estado) => {
-    switch (estado) {
-      case 'BUENO': return '#10b981'
-      case 'REGULAR': return '#f59e0b'
-      case 'MALO': return '#ef4444'
-      default: return '#6b7280'
-    }
-  }
+  const toggleButtonStyles = (isActive) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    width: '100%',
+    padding: '12px',
+    marginBottom: '8px',
+    border: 'none',
+    borderRadius: '6px',
+    background: isActive ? '#3b82f6' : '#f8fafc',
+    color: isActive ? 'white' : '#334155',
+    cursor: 'pointer',
+    fontSize: '15px',
+    fontWeight: '500',
+    transition: 'all 0.2s ease'
+  })
 
   return (
     <div style={{ position: 'relative', width: "100%", height: "100vh" }}>
       <div ref={mapContainer} style={{ width: "100%", height: "100%" }} />
       
-      {/* Panel de información */}
-      {showPopup && (
-        <div 
-          ref={popupRef}
-          style={{
-            position: 'absolute',
-            top: '20px',
-            right: '20px',
-            width: '350px',
-            background: 'white',
-            borderRadius: '10px',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-            padding: '20px',
-            zIndex: 1000,
-            maxHeight: '80vh',
-            overflowY: 'auto'
-          }}
-        >
-          <button 
-            onClick={ocultarInfo}
-            style={{
-              position: 'absolute',
-              top: '10px',
-              right: '10px',
-              background: '#ff4444',
-              color: 'white',
-              border: 'none',
-              borderRadius: '50%',
-              width: '25px',
-              height: '25px',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            ×
-          </button>
-          
-          {popupType === 'servicio' && servicioSeleccionado && (
-            <>
-              <h3 style={{ 
-                margin: '0 0 15px 0', 
-                color: '#333',
-                borderBottom: '2px solid #3b82f6',
-                paddingBottom: '8px'
-              }}>
-                🏠 {servicioSeleccionado.nombre_servicio}
-              </h3>
-              
-              <div style={{ marginBottom: '15px' }}>
-                <strong style={{ color: '#666' }}>Tipo de servicio:</strong>
-                <span style={{ 
-                  display: 'inline-block',
-                  background: '#3b82f6',
-                  color: 'white',
-                  padding: '4px 8px',
-                  borderRadius: '12px',
-                  fontSize: '12px',
-                  marginLeft: '8px'
-                }}>
-                  {servicioSeleccionado.tipo_servicio}
-                </span>
-              </div>
-              
-              {servicioSeleccionado.costo && (
-                <div style={{ marginBottom: '10px' }}>
-                  <strong style={{ color: '#666' }}>Costo:</strong>
-                  <span style={{ marginLeft: '8px', color: '#2ecc71', fontWeight: 'bold' }}>
-                    Bs {servicioSeleccionado.costo}
-                  </span>
-                </div>
-              )}
-              
-              {servicioSeleccionado.direccion && (
-                <div style={{ marginBottom: '10px' }}>
-                  <strong style={{ color: '#666' }}>Dirección:</strong>
-                  <p style={{ margin: '5px 0 0 0', color: '#555' }}>
-                    {servicioSeleccionado.direccion}
-                  </p>
-                </div>
-              )}
-              
-              {servicioSeleccionado.telefono && (
-                <div style={{ marginBottom: '10px' }}>
-                  <strong style={{ color: '#666' }}>Teléfono:</strong>
-                  <span style={{ marginLeft: '8px', color: '#555' }}>
-                    {servicioSeleccionado.telefono}
-                  </span>
-                </div>
-              )}
-              
-              {servicioSeleccionado.calificacion && (
-                <div style={{ marginBottom: '10px' }}>
-                  <strong style={{ color: '#666' }}>Calificación:</strong>
-                  <span style={{ 
-                    marginLeft: '8px', 
-                    color: '#f39c12', 
-                    fontWeight: 'bold' 
-                  }}>
-                    ⭐ {servicioSeleccionado.calificacion}/5
-                  </span>
-                </div>
-              )}
-              
-              {servicioSeleccionado.nombre_atractivo && (
-                <div style={{ 
-                  marginTop: '15px',
-                  padding: '10px',
-                  background: '#f8f9fa',
-                  borderRadius: '6px',
-                  borderLeft: '4px solid #28a745'
-                }}>
-                  <strong style={{ color: '#666', display: 'block', marginBottom: '5px' }}>
-                    Atractivo turístico asociado:
-                  </strong>
-                  <span style={{ color: '#28a745', fontWeight: 'bold' }}>
-                    {servicioSeleccionado.nombre_atractivo}
-                  </span>
-                </div>
-              )}
-            </>
-          )}
-
-          {popupType === 'atractivo' && atractivoSeleccionado && (
-            <>
-              <h3 style={{ 
-                margin: '0 0 15px 0', 
-                color: '#333',
-                borderBottom: '2px solid #10b981',
-                paddingBottom: '8px'
-              }}>
-                🏞️ {atractivoSeleccionado.nombre}
-              </h3>
-              
-              <div style={{ marginBottom: '15px' }}>
-                <strong style={{ color: '#666' }}>Tipo de atractivo:</strong>
-                <span style={{ 
-                  display: 'inline-block',
-                  background: '#10b981',
-                  color: 'white',
-                  padding: '4px 8px',
-                  borderRadius: '12px',
-                  fontSize: '12px',
-                  marginLeft: '8px'
-                }}>
-                  {atractivoSeleccionado.tipo_atractivo}
-                </span>
-              </div>
-
-              <div style={{ marginBottom: '10px' }}>
-                <strong style={{ color: '#666' }}>Estado:</strong>
-                <span style={{ 
-                  display: 'inline-block',
-                  background: getEstadoColor(atractivoSeleccionado.estado),
-                  color: 'white',
-                  padding: '4px 8px',
-                  borderRadius: '12px',
-                  fontSize: '12px',
-                  marginLeft: '8px'
-                }}>
-                  {atractivoSeleccionado.estado}
-                </span>
-              </div>
-
-              {atractivoSeleccionado.tiempo_visita && (
-                <div style={{ marginBottom: '10px' }}>
-                  <strong style={{ color: '#666' }}>Tiempo de visita:</strong>
-                  <span style={{ marginLeft: '8px', color: '#555' }}>
-                    {atractivoSeleccionado.tiempo_visita} minutos
-                  </span>
-                </div>
-              )}
-
-              {atractivoSeleccionado.elevacion && (
-                <div style={{ marginBottom: '10px' }}>
-                  <strong style={{ color: '#666' }}>Elevación:</strong>
-                  <span style={{ marginLeft: '8px', color: '#555' }}>
-                    {atractivoSeleccionado.elevacion} m.s.n.m
-                  </span>
-                </div>
-              )}
-
-              <div style={{ 
-                marginTop: '15px',
-                padding: '10px',
-                background: '#f0fdf4',
-                borderRadius: '6px',
-                borderLeft: '4px solid #10b981'
-              }}>
-                <strong style={{ color: '#666', display: 'block', marginBottom: '5px' }}>
-                  Coordenadas:
-                </strong>
-                <div style={{ fontSize: '12px', color: '#555' }}>
-                  <div>Lat: {atractivoSeleccionado.latitud}</div>
-                  <div>Lng: {atractivoSeleccionado.longitud}</div>
-                  {atractivoSeleccionado.este && atractivoSeleccionado.norte && (
-                    <>
-                      <div>Este: {atractivoSeleccionado.este}</div>
-                      <div>Norte: {atractivoSeleccionado.norte}</div>
-                    </>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
-
-          {popupType === 'area' && areaSeleccionada && (
-            <>
-              <h3 style={{ 
-                margin: '0 0 15px 0', 
-                color: '#333',
-                borderBottom: '2px solid #8b5cf6',
-                paddingBottom: '8px'
-              }}>
-                🛡️ Área Protegida 3D
-              </h3>
-              
-              <div style={{ marginBottom: '15px' }}>
-                <strong style={{ color: '#666' }}>Visualización:</strong>
-                <span style={{ 
-                  display: 'inline-block',
-                  background: '#8b5cf6',
-                  color: 'white',
-                  padding: '4px 8px',
-                  borderRadius: '12px',
-                  fontSize: '12px',
-                  marginLeft: '8px'
-                }}>
-                  Extrusión 3D
-                </span>
-              </div>
-
-              {areaSeleccionada.descripcion && (
-                <div style={{ marginBottom: '15px' }}>
-                  <strong style={{ color: '#666', display: 'block', marginBottom: '5px' }}>
-                    Descripción:
-                  </strong>
-                  <p style={{ margin: 0, color: '#555', lineHeight: '1.5' }}>
-                    {areaSeleccionada.descripcion}
-                  </p>
-                </div>
-              )}
-
-              {areaSeleccionada.nombre_atractivo && (
-                <div style={{ 
-                  marginTop: '15px',
-                  padding: '10px',
-                  background: '#faf5ff',
-                  borderRadius: '6px',
-                  borderLeft: '4px solid #8b5cf6'
-                }}>
-                  <strong style={{ color: '#666', display: 'block', marginBottom: '5px' }}>
-                    Atractivo Turístico Asociado:
-                  </strong>
-                  <span style={{ color: '#7c3aed', fontWeight: 'bold' }}>
-                    {areaSeleccionada.nombre_atractivo}
-                  </span>
-                </div>
-              )}
-
-              <div style={{ 
-                marginTop: '15px',
-                padding: '10px',
-                background: '#f8fafc',
-                borderRadius: '6px',
-                border: '1px solid #e2e8f0'
-              }}>
-              </div>
-            </>
-          )}
-        </div>
-      )}
+      <div style={controlStyles}>
+        <h4 style={{ 
+          margin: '0 0 15px 0', 
+          color: '#333', 
+          textAlign: 'center',
+          fontSize: '18px'
+        }}>
+          🎯 Control de Capas
+        </h4>
+        
+        <button onClick={() => setShowServicios(!showServicios)} style={toggleButtonStyles(showServicios)}>
+          <span>🏠</span> Servicios {showServicios ? '✓' : '✗'}
+        </button>
+        <button onClick={() => setShowAtractivos(!showAtractivos)} style={toggleButtonStyles(showAtractivos)}>
+          <span>🏞️</span> Atractivos {showAtractivos ? '✓' : '✗'}
+        </button>
+        <button onClick={() => setShowTracks(!showTracks)} style={toggleButtonStyles(showTracks)}>
+          <span>🛣️</span> Tracks {showTracks ? '✓' : '✗'}
+        </button>
+        <button onClick={() => setShowAreas(!showAreas)} style={toggleButtonStyles(showAreas)}>
+          <span>🛡️</span> Áreas 3D {showAreas ? '✓' : '✗'}
+        </button>
+        <button onClick={() => setShowDepartamentos(!showDepartamentos)} style={toggleButtonStyles(showDepartamentos)}>
+          <span>🗺️</span> Departamentos {showDepartamentos ? '✓' : '✗'}
+        </button>
+        <button onClick={() => setShowLocalidades(!showLocalidades)} style={toggleButtonStyles(showLocalidades)}>
+          <span>🏘️</span> Localidades {showLocalidades ? '✓' : '✗'}
+        </button>
+        <button onClick={() => setShowPoligTor(!showPoligTor)} style={toggleButtonStyles(showPoligTor)}>
+          <span>📍</span> Polígono Toro Toro {showPoligTor ? '✓' : '✗'}
+        </button>
+        <button onClick={() => setShowRios(!showRios)} style={toggleButtonStyles(showRios)}>
+          <span>🌊</span> Ríos Principales {showRios ? '✓' : '✗'}
+        </button>
+      </div>
     </div>
   )
 }

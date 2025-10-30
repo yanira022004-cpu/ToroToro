@@ -367,15 +367,15 @@ export const ServiciosDashboard = () => {
               </div>
             </Link>
           </nav>
-        </div>
-        
-        <div style={styles.sidebarFooter}>
           <button
             onClick={() => setDarkMode(!darkMode)}
             style={styles.darkButton}
           >
             {darkMode ? "☀️ Modo Claro" : "🌙 Modo Oscuro"}
           </button>
+        </div>
+        
+        <div style={styles.sidebarFooter}>
         </div>
       </aside>
 

@@ -9,3 +9,18 @@ GET http://localhost:3333/api/track_toro_toro
 
 ###
 GET http://localhost:3333/api/all
+
+###
+GET http://localhost:3333/api/departamentos
+
+###
+GET http://localhost:3333/api/localidades
+
+###
+GET http://localhost:3333/api/polig_tor
+
+###
+GET http://localhost:3333/api/rios_principales
+
+###
+GET http://localhost:3333/api/rios_secundarios

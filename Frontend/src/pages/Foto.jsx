@@ -5,6 +5,7 @@ export const Foto = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [atractivos, setAtractivos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(null); // Estado para la imagen seleccionada
 
   // 🔹 Temas mejorados
   const lightTheme = {
@@ -152,6 +153,7 @@ export const Foto = () => {
       width: "100%",
       height: "200px",
       objectFit: "cover",
+      cursor: "pointer",
     },
     photoContent: {
       padding: "20px",
@@ -246,6 +248,80 @@ export const Foto = () => {
       background: `linear-gradient(135deg, ${theme.accent}20, ${theme.accentHover}20)`,
       color: theme.accent,
       fontSize: "48px",
+      cursor: "pointer",
+    },
+    // 🔹 Estilos para el modal
+    modalOverlay: {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0, 0, 0, 0.8)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 1000,
+      padding: "20px",
+    },
+    modalContent: {
+      position: "relative",
+      maxWidth: "90vw",
+      maxHeight: "90vh",
+      borderRadius: "12px",
+      overflow: "hidden",
+      boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+    },
+    modalImage: {
+      width: "100%",
+      height: "auto",
+      maxHeight: "90vh",
+      objectFit: "contain",
+      display: "block",
+    },
+    modalCloseButton: {
+      position: "absolute",
+      top: "16px",
+      right: "16px",
+      backgroundColor: "rgba(0, 0, 0, 0.7)",
+      color: "white",
+      border: "none",
+      borderRadius: "50%",
+      width: "40px",
+      height: "40px",
+      fontSize: "20px",
+      cursor: "pointer",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      transition: "all 0.2s ease",
+      zIndex: 1001,
+      ":hover": {
+        backgroundColor: "rgba(255, 0, 0, 0.8)",
+        transform: "scale(1.1)",
+      },
+    },
+    modalInfo: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: "rgba(0, 0, 0, 0.7)",
+      color: "white",
+      padding: "20px",
+      transform: "translateY(0)",
+      transition: "transform 0.3s ease",
+    },
+    modalTitle: {
+      fontSize: "24px",
+      fontWeight: "700",
+      marginBottom: "8px",
+      color: "white",
+    },
+    modalText: {
+      fontSize: "16px",
+      marginBottom: "4px",
+      opacity: 0.9,
     },
   };
 
@@ -264,6 +340,29 @@ export const Foto = () => {
     fetchAtractivos();
   }, []);
 
+  // Función para abrir el modal
+  const openModal = (item, imageUrl) => {
+    setSelectedImage({ item, imageUrl });
+  };
+
+  // Función para cerrar el modal
+  const closeModal = () => {
+    setSelectedImage(null);
+  };
+
+  // Cerrar modal con ESC
+  useEffect(() => {
+    const handleEsc = (event) => {
+      if (event.keyCode === 27) {
+        closeModal();
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, []);
+
   // Componente para cada tarjeta de imagen
   const PhotoCard = ({ item }) => {
     const [imageError, setImageError] = useState(false);
@@ -272,6 +371,8 @@ export const Foto = () => {
     const getLocalImage = (idAtractivo) => {
       return `/images/${idAtractivo}.jpg`;
     };
+
+    const imageUrl = getLocalImage(item.id_atractivo);
 
     // Función para generar enlace a Google Maps
     const getGoogleMapsLink = (latitud, longitud, nombre) => {
@@ -306,13 +407,17 @@ export const Foto = () => {
       <div style={styles.photoCard}>
         {!imageError ? (
           <img 
-            src={getLocalImage(item.id_atractivo)}
+            src={imageUrl}
             alt={item.nombre_atractivo}
             style={styles.photoImage}
             onError={() => setImageError(true)}
+            onClick={() => openModal(item, imageUrl)}
           />
         ) : (
-          <div style={styles.placeholderImage}>
+          <div 
+            style={styles.placeholderImage}
+            onClick={() => openModal(item, null)}
+          >
             {getTypeEmoji(item.tipo_atractivo)}
           </div>
         )}
@@ -362,6 +467,90 @@ export const Foto = () => {
     );
   };
 
+  // Componente del Modal
+  const ImageModal = () => {
+    if (!selectedImage) return null;
+
+    const { item, imageUrl } = selectedImage;
+
+    // Función para obtener emoji según el tipo
+    const getTypeEmoji = (tipo) => {
+      switch (tipo?.toUpperCase()) {
+        case "FOSIL":
+          return "🦴";
+        case "GEOLOGICO":
+          return "🏔️";
+        case "ARQUEOLOGICO":
+          return "🏺";
+        case "PALEONTOLOGICO":
+          return "🧬";
+        case "NATURAL":
+          return "🌿";
+        case "CULTURAL":
+          return "🎭";
+        default:
+          return "📍";
+      }
+    };
+
+    return (
+      <div 
+        style={styles.modalOverlay}
+        onClick={closeModal}
+      >
+        <div 
+          style={styles.modalContent}
+          onClick={(e) => e.stopPropagation()} // Prevenir cerrar al hacer click en la imagen
+        >
+          <button
+            style={styles.modalCloseButton}
+            onClick={closeModal}
+            title="Cerrar (ESC)"
+          >
+            ×
+          </button>
+          
+          {imageUrl ? (
+            <img 
+              src={imageUrl}
+              alt={item.nombre_atractivo}
+              style={styles.modalImage}
+            />
+          ) : (
+            <div style={{
+              ...styles.placeholderImage,
+              width: "600px",
+              height: "400px",
+              fontSize: "120px",
+              backgroundColor: theme.card,
+            }}>
+              {getTypeEmoji(item.tipo_atractivo)}
+            </div>
+          )}
+          
+          <div style={styles.modalInfo}>
+            <h3 style={styles.modalTitle}>
+              {getTypeEmoji(item.tipo_atractivo)} {item.nombre_atractivo}
+            </h3>
+            <p style={styles.modalText}>
+              <strong>Tipo:</strong> {item.tipo_atractivo} | 
+              <strong> Categoría:</strong> {item.nombre_categoria}
+            </p>
+            <p style={styles.modalText}>
+              <strong>Estado:</strong> {item.estado} | 
+              <strong> Riesgo:</strong> {item.nivel_riesgo}
+            </p>
+            {item.latitud && item.longitud && (
+              <p style={styles.modalText}>
+                <strong>Coordenadas:</strong> {parseFloat(item.latitud).toFixed(4)}, {parseFloat(item.longitud).toFixed(4)}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div style={styles.container}>
       {/* ===== SIDEBAR ===== */}
@@ -396,11 +585,9 @@ export const Foto = () => {
               <span>🖼️</span>
               Galería
             </div>
+            
           </nav>
-        </div>
-        
-        <div style={styles.sidebarFooter}>
-          <button
+                    <button
             onClick={() => setDarkMode(!darkMode)}
             style={styles.darkButton}
           >
@@ -409,7 +596,6 @@ export const Foto = () => {
         </div>
       </aside>
 
-      {/* ===== MAIN ===== */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <nav style={styles.navbar}>
           <h3 style={{ 
@@ -453,6 +639,9 @@ export const Foto = () => {
           )}
         </main>
       </div>
+
+      {/* 🔹 Modal para imagen ampliada */}
+      <ImageModal />
 
       <style>
         {`

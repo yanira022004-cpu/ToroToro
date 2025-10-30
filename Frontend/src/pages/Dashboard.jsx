@@ -342,10 +342,7 @@ export const Dashboard = () => {
               </div>
             </Link>
           </nav>
-        </div>
-        
-        <div style={styles.sidebarFooter}>
-          <button
+                    <button
             onClick={() => setDarkMode(!darkMode)}
             style={styles.darkButton}
           >
