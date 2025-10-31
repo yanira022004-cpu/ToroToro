@@ -16,6 +16,13 @@ export const Mapa3d = () => {
   const [poligTor, setPoligTor] = useState([])
   const [riosPrincipales, setRiosPrincipales] = useState([])
   const [riosSecundarios, setRiosSecundarios] = useState([])
+  const [viasSecundarias, setViasSecundarias] = useState([])
+  const [servicioSeleccionado, setServicioSeleccionado] = useState(null)
+  const [atractivoSeleccionado, setAtractivoSeleccionado] = useState(null)
+  const [areaSeleccionada, setAreaSeleccionada] = useState(null)
+  const [localidadSeleccionada, setLocalidadSeleccionada] = useState(null)
+  const [showPopup, setShowPopup] = useState(false)
+  const [popupType, setPopupType] = useState('')
   const [mapLoaded, setMapLoaded] = useState(false)
   
   const [showServicios, setShowServicios] = useState(true)
@@ -27,6 +34,7 @@ export const Mapa3d = () => {
   const [showPoligTor, setShowPoligTor] = useState(true)
   const [showRiosPrincipales, setShowRiosPrincipales] = useState(true)
   const [showRiosSecundarios, setShowRiosSecundarios] = useState(true)
+  const [showViasSecundarias, setShowViasSecundarias] = useState(true)
 
   const coloresDepartamentos = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7']
   const coloresLocalidades = ['#FF9FF3', '#F368E0', '#FF9F43', '#FFCA3A', '#8AC926']
@@ -43,6 +51,24 @@ export const Mapa3d = () => {
     
     if (map.current.getSource(sourceId)) {
       map.current.removeSource(sourceId)
+    }
+  }
+
+  const ocultarInfo = () => {
+    setShowPopup(false)
+    setServicioSeleccionado(null)
+    setAtractivoSeleccionado(null)
+    setAreaSeleccionada(null)
+    setLocalidadSeleccionada(null)
+    setPopupType('')
+  }
+
+  const getEstadoColor = (estado) => {
+    switch (estado) {
+      case 'BUENO': return '#10b981'
+      case 'REGULAR': return '#f59e0b'
+      case 'MALO': return '#ef4444'
+      default: return '#6b7280'
     }
   }
 
@@ -141,6 +167,16 @@ export const Mapa3d = () => {
       }
     }
 
+    const fetchViasSecundarias = async () => {
+      try {
+        const res = await fetch("http://localhost:3333/api/vias_secundarias")
+        const data = await res.json()
+        setViasSecundarias(data.features || [])
+      } catch (error) {
+        console.error("Error obteniendo vías secundarias:", error)
+      }
+    }
+
     fetchDepartamentos()
     fetchLocalidades()
     fetchAreasProtegidas()
@@ -150,6 +186,7 @@ export const Mapa3d = () => {
     fetchPoligTor()
     fetchRiosPrincipales()
     fetchRiosSecundarios()
+    fetchViasSecundarias()
   }, [])
 
   useEffect(() => {
@@ -248,7 +285,8 @@ export const Mapa3d = () => {
       localidades: ['localidades-layer', 'localidades-labels'],
       poligTor: ['polig-tor-fill', 'polig-tor-border'],
       riosPrincipales: ['rios-principales-layer', 'rios-principales-labels'],
-      riosSecundarios: ['rios-secundarios-layer', 'rios-secundarios-labels']
+      riosSecundarios: ['rios-secundarios-layer', 'rios-secundarios-labels'],
+      viasSecundarias: ['vias-secundarias-layer', 'vias-secundarias-labels']
     }
 
     layers[layerType]?.forEach(layerId => {
@@ -271,6 +309,203 @@ export const Mapa3d = () => {
   useEffect(() => { toggleLayer('poligTor', showPoligTor) }, [showPoligTor, mapLoaded])
   useEffect(() => { toggleLayer('riosPrincipales', showRiosPrincipales) }, [showRiosPrincipales, mapLoaded])
   useEffect(() => { toggleLayer('riosSecundarios', showRiosSecundarios) }, [showRiosSecundarios, mapLoaded])
+  useEffect(() => { toggleLayer('viasSecundarias', showViasSecundarias) }, [showViasSecundarias, mapLoaded])
+
+  // Eventos del mapa para mostrar información
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return
+
+    const setupMapEvents = () => {
+      // Eventos para servicios
+      map.current.on('mouseenter', 'servicios-layer', () => {
+        map.current.getCanvas().style.cursor = 'pointer'
+        map.current.setPaintProperty('servicios-layer', 'icon-opacity', 1)
+      })
+
+      map.current.on('mouseleave', 'servicios-layer', () => {
+        map.current.getCanvas().style.cursor = ''
+        map.current.setPaintProperty('servicios-layer', 'icon-opacity', 0.9)
+      })
+
+      map.current.on('click', 'servicios-layer', (e) => {
+        const feature = e.features[0]
+        if (feature) {
+          const servicio = servicios.find(s => s.id_servicio === feature.properties.id)
+          if (servicio) {
+            setServicioSeleccionado(servicio)
+            setAtractivoSeleccionado(null)
+            setAreaSeleccionada(null)
+            setLocalidadSeleccionada(null)
+            setPopupType('servicio')
+            setShowPopup(true)
+          }
+        }
+      })
+
+      // Eventos para atractivos
+      map.current.on('mouseenter', 'atractivos-layer', () => {
+        map.current.getCanvas().style.cursor = 'pointer'
+        map.current.setPaintProperty('atractivos-layer', 'circle-color', '#059669')
+      })
+
+      map.current.on('mouseleave', 'atractivos-layer', () => {
+        map.current.getCanvas().style.cursor = ''
+        map.current.setPaintProperty('atractivos-layer', 'circle-color', '#10b981')
+      })
+
+      map.current.on('click', 'atractivos-layer', (e) => {
+        const feature = e.features[0]
+        if (feature) {
+          const atractivo = atractivos.find(a => a.id_atrac_turist === feature.properties.id)
+          if (atractivo) {
+            setAtractivoSeleccionado(atractivo)
+            setServicioSeleccionado(null)
+            setAreaSeleccionada(null)
+            setLocalidadSeleccionada(null)
+            setPopupType('atractivo')
+            setShowPopup(true)
+          }
+        }
+      })
+
+      // Eventos para áreas protegidas
+      map.current.on('mouseenter', 'areas-3d', () => {
+        map.current.getCanvas().style.cursor = 'pointer'
+        map.current.setPaintProperty('areas-3d', 'fill-extrusion-opacity', 0.7)
+        map.current.setPaintProperty('areas-3d', 'fill-extrusion-color', '#7c3aed')
+        map.current.setPaintProperty('areas-border', 'line-width', 4)
+      })
+
+      map.current.on('mouseleave', 'areas-3d', () => {
+        map.current.getCanvas().style.cursor = ''
+        map.current.setPaintProperty('areas-3d', 'fill-extrusion-opacity', 0.4)
+        map.current.setPaintProperty('areas-3d', 'fill-extrusion-color', '#8b5cf6')
+        map.current.setPaintProperty('areas-border', 'line-width', 3)
+      })
+
+      map.current.on('click', 'areas-3d', (e) => {
+        const feature = e.features[0]
+        if (feature) {
+          const area = areasProtegidas.find(a => a.id_area_prot === feature.properties.id)
+          if (area) {
+            const atractivoAsociado = atractivos.find(a => a.id_atrac_turist === area.atractivo_turistico_id)
+            setAreaSeleccionada({
+              ...area,
+              nombre_atractivo: atractivoAsociado ? atractivoAsociado.nombre : null
+            })
+            setServicioSeleccionado(null)
+            setAtractivoSeleccionado(null)
+            setLocalidadSeleccionada(null)
+            setPopupType('area')
+            setShowPopup(true)
+          }
+        }
+      })
+
+      // Eventos para localidades
+      map.current.on('mouseenter', 'localidades-layer', () => {
+        map.current.getCanvas().style.cursor = 'pointer'
+        map.current.setPaintProperty('localidades-layer', 'circle-opacity', 1)
+      })
+
+      map.current.on('mouseleave', 'localidades-layer', () => {
+        map.current.getCanvas().style.cursor = ''
+        map.current.setPaintProperty('localidades-layer', 'circle-opacity', 0.8)
+      })
+
+      map.current.on('click', 'localidades-layer', (e) => {
+        const feature = e.features[0]
+        if (feature) {
+          setLocalidadSeleccionada(feature.properties)
+          setServicioSeleccionado(null)
+          setAtractivoSeleccionado(null)
+          setAreaSeleccionada(null)
+          setPopupType('localidad')
+          setShowPopup(true)
+        }
+      })
+
+      // Eventos para departamentos (solo hover, sin popup)
+      map.current.on('mouseenter', 'departamentos-fill', () => {
+        map.current.getCanvas().style.cursor = 'pointer'
+        map.current.setPaintProperty('departamentos-fill', 'fill-opacity', 0.8)
+      })
+
+      map.current.on('mouseleave', 'departamentos-fill', () => {
+        map.current.getCanvas().style.cursor = ''
+        map.current.setPaintProperty('departamentos-fill', 'fill-opacity', 0.6)
+      })
+    }
+
+    if (map.current.isStyleLoaded()) {
+      setupMapEvents()
+    } else {
+      map.current.once('idle', setupMapEvents)
+    }
+  }, [mapLoaded, servicios, atractivos, areasProtegidas, localidades])
+
+  // Resto de los useEffect para las capas (se mantienen igual)
+  // Capa de Vías Secundarias
+  useEffect(() => {
+    if (!map.current || !viasSecundarias.length || !mapLoaded) return
+
+    const addViasSecundariasToMap = () => {
+      cleanupLayer('vias-secundarias', ['vias-secundarias-layer', 'vias-secundarias-labels'])
+
+      const viasSecundariasGeoJSON = {
+        type: 'FeatureCollection',
+        features: viasSecundarias
+      }
+
+      map.current.addSource('vias-secundarias', {
+        type: 'geojson',
+        data: viasSecundariasGeoJSON
+      })
+
+      map.current.addLayer({
+        id: 'vias-secundarias-layer',
+        type: 'line',
+        source: 'vias-secundarias',
+        layout: { 'visibility': showViasSecundarias ? 'visible' : 'none' },
+        paint: {
+          'line-color': '#f59e0b',
+          'line-width': 2,
+          'line-opacity': 0.8
+        }
+      })
+
+      map.current.addLayer({
+        id: 'vias-secundarias-labels',
+        type: 'symbol',
+        source: 'vias-secundarias',
+        layout: {
+          'visibility': showViasSecundarias ? 'visible' : 'none',
+          'text-field': ['get', 'nombre'],
+          'text-size': 11,
+          'text-offset': [0, 0],
+          'text-anchor': 'center',
+          'text-optional': true
+        },
+        paint: {
+          'text-color': '#f59e0b',
+          'text-halo-color': '#ffffff',
+          'text-halo-width': 1
+        }
+      })
+    }
+
+    if (map.current.isStyleLoaded()) {
+      addViasSecundariasToMap()
+    } else {
+      map.current.once("idle", addViasSecundariasToMap)
+    }
+
+    return () => {
+      if (map.current) {
+        cleanupLayer('vias-secundarias', ['vias-secundarias-layer', 'vias-secundarias-labels'])
+      }
+    }
+  }, [viasSecundarias, mapLoaded, showViasSecundarias])
 
   // Capa de Ríos Principales
   useEffect(() => {
@@ -563,7 +798,7 @@ export const Mapa3d = () => {
           'text-optional': true
         },
         paint: {
-          'text-color': '#854d0e',
+          'text-color': '#ff9000',
           'text-halo-color': '#ffffff',
           'text-halo-width': 2
         }
@@ -892,6 +1127,34 @@ export const Mapa3d = () => {
     transition: 'all 0.2s ease'
   })
 
+  const popupStyles = {
+    position: 'absolute',
+    top: '20px',
+    right: '20px',
+    width: '420px',
+    background: 'white',
+    borderRadius: '12px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+    padding: '25px',
+    zIndex: 1000,
+    maxHeight: '80vh',
+    overflowY: 'auto'
+  }
+
+  const closeButtonStyles = {
+    position: 'absolute',
+    top: '12px',
+    right: '12px',
+    background: '#ff4444',
+    color: 'white',
+    border: 'none',
+    borderRadius: '50%',
+    width: '30px',
+    height: '30px',
+    cursor: 'pointer',
+    fontSize: '16px'
+  }
+
   return (
     <div style={{ position: 'relative', width: "100%", height: "100vh" }}>
       <div ref={mapContainer} style={{ width: "100%", height: "100%" }} />
@@ -933,7 +1196,145 @@ export const Mapa3d = () => {
         <button onClick={() => setShowRiosSecundarios(!showRiosSecundarios)} style={toggleButtonStyles(showRiosSecundarios)}>
           <span>💧</span> Ríos Secundarios {showRiosSecundarios ? '✓' : '✗'}
         </button>
+        <button onClick={() => setShowViasSecundarias(!showViasSecundarias)} style={toggleButtonStyles(showViasSecundarias)}>
+          <span>🛣️</span> Vías Secundarias {showViasSecundarias ? '✓' : '✗'}
+        </button>
       </div>
+      
+      {/* Panel de información */}
+      {showPopup && (
+        <div style={popupStyles}>
+          <button onClick={ocultarInfo} style={closeButtonStyles}>×</button>
+          
+          {popupType === 'servicio' && servicioSeleccionado && (
+            <>
+              <h3 style={{ margin: '0 0 18px 0', color: '#333', borderBottom: '2px solid #3b82f6', paddingBottom: '10px', fontSize: '20px' }}>
+                🏠 {servicioSeleccionado.nombre_servicio}
+              </h3>
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Tipo de servicio:</strong>
+                <span style={{ display: 'inline-block', background: '#3b82f6', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {servicioSeleccionado.tipo_servicio}
+                </span>
+              </div>
+              {servicioSeleccionado.costo && (
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#666', fontSize: '16px' }}>Costo:</strong>
+                  <span style={{ marginLeft: '10px', color: '#2ecc71', fontWeight: 'bold', fontSize: '16px' }}>Bs {servicioSeleccionado.costo}</span>
+                </div>
+              )}
+              {servicioSeleccionado.direccion && (
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#666', fontSize: '16px' }}>Dirección:</strong>
+                  <p style={{ margin: '8px 0 0 0', color: '#555', fontSize: '15px', lineHeight: '1.4' }}>{servicioSeleccionado.direccion}</p>
+                </div>
+              )}
+              {servicioSeleccionado.telefono && (
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#666', fontSize: '16px' }}>Teléfono:</strong>
+                  <span style={{ marginLeft: '10px', color: '#555', fontSize: '16px' }}>{servicioSeleccionado.telefono}</span>
+                </div>
+              )}
+              {servicioSeleccionado.calificacion && (
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#666', fontSize: '16px' }}>Calificación:</strong>
+                  <span style={{ marginLeft: '10px', color: '#f39c12', fontWeight: 'bold', fontSize: '16px' }}>⭐ {servicioSeleccionado.calificacion}/5</span>
+                </div>
+              )}
+              {servicioSeleccionado.nombre_atractivo && (
+                <div style={{ marginTop: '18px', padding: '12px', background: '#f8f9fa', borderRadius: '8px', borderLeft: '4px solid #28a745' }}>
+                  <strong style={{ color: '#666', display: 'block', marginBottom: '6px', fontSize: '16px' }}>Atractivo turístico asociado:</strong>
+                  <span style={{ color: '#28a745', fontWeight: 'bold', fontSize: '16px' }}>{servicioSeleccionado.nombre_atractivo}</span>
+                </div>
+              )}
+            </>
+          )}
+
+          {popupType === 'atractivo' && atractivoSeleccionado && (
+            <>
+              <h3 style={{ margin: '0 0 18px 0', color: '#333', borderBottom: '2px solid #10b981', paddingBottom: '10px', fontSize: '20px' }}>
+                🏞️ {atractivoSeleccionado.nombre}
+              </h3>
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Tipo de atractivo:</strong>
+                <span style={{ display: 'inline-block', background: '#10b981', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {atractivoSeleccionado.tipo_atractivo}
+                </span>
+              </div>
+              <div style={{ marginBottom: '12px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Estado:</strong>
+                <span style={{ display: 'inline-block', background: getEstadoColor(atractivoSeleccionado.estado), color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {atractivoSeleccionado.estado}
+                </span>
+              </div>
+              {atractivoSeleccionado.tiempo_visita && (
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#666', fontSize: '16px' }}>Tiempo de visita:</strong>
+                  <span style={{ marginLeft: '10px', color: '#555', fontSize: '16px' }}>{atractivoSeleccionado.tiempo_visita} minutos</span>
+                </div>
+              )}
+              {atractivoSeleccionado.elevacion && (
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#666', fontSize: '16px' }}>Elevación:</strong>
+                  <span style={{ marginLeft: '10px', color: '#555', fontSize: '16px' }}>{atractivoSeleccionado.elevacion} m.s.n.m</span>
+                </div>
+              )}
+            </>
+          )}
+
+          {popupType === 'area' && areaSeleccionada && (
+            <>
+              <h3 style={{ margin: '0 0 18px 0', color: '#333', borderBottom: '2px solid #8b5cf6', paddingBottom: '10px', fontSize: '20px' }}>
+                🛡️ Área Protegida 3D
+              </h3>
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Visualización:</strong>
+                <span style={{ display: 'inline-block', background: '#8b5cf6', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  Extrusión 3D
+                </span>
+              </div>
+              {areaSeleccionada.descripcion && (
+                <div style={{ marginBottom: '18px' }}>
+                  <strong style={{ color: '#666', display: 'block', marginBottom: '6px', fontSize: '16px' }}>Descripción:</strong>
+                  <p style={{ margin: 0, color: '#555', lineHeight: '1.5', fontSize: '15px' }}>{areaSeleccionada.descripcion}</p>
+                </div>
+              )}
+              {areaSeleccionada.nombre_atractivo && (
+                <div style={{ marginTop: '18px', padding: '12px', background: '#faf5ff', borderRadius: '8px', borderLeft: '4px solid #8b5cf6' }}>
+                  <strong style={{ color: '#666', display: 'block', marginBottom: '6px', fontSize: '16px' }}>Atractivo Turístico Asociado:</strong>
+                  <span style={{ color: '#7c3aed', fontWeight: 'bold', fontSize: '16px' }}>{areaSeleccionada.nombre_atractivo}</span>
+                </div>
+              )}
+            </>
+          )}
+
+          {popupType === 'localidad' && localidadSeleccionada && (
+            <>
+              <h3 style={{ margin: '0 0 18px 0', color: '#333', borderBottom: '2px solid #eab308', paddingBottom: '10px', fontSize: '20px' }}>
+                🏘️ {localidadSeleccionada.nombre}
+              </h3>
+              <div style={{ marginBottom: '18px'}}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Nombre:</strong>
+                <span style={{ display: 'inline-block', background: '#fbbf24', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {localidadSeleccionada.nombre}
+                </span>
+              </div>
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Categoría:</strong>
+                <span style={{ display: 'inline-block', background: '#eab308', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {localidadSeleccionada.categoria}
+                </span>
+              </div>
+              <div style={{ marginBottom: '12px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Subcategoría:</strong>
+                <span style={{ display: 'inline-block', background: '#f59e0b', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {localidadSeleccionada.subcategoria}
+                </span>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   )
 }

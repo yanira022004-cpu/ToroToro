@@ -7,6 +7,7 @@ import { localidades } from '../controller/Localidades'
 import { polig_tor } from '../controller/Polig_tor'
 import { rios_principales } from '../controller/Rios_principales'
 import { rios_secundarios } from '../controller/Rios_secundarios'
+import { viasSecundarias } from '../controller/ViasSecundarias'
 
 export const router = Router()
 
@@ -22,3 +23,4 @@ router.get('/localidades', localidades)
 router.get('/polig_tor', polig_tor)
 router.get('/rios_principales', rios_principales)
 router.get('/rios_secundarios', rios_secundarios)
+router.get('/vias_secundarias', viasSecundarias)
