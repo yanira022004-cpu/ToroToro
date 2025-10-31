@@ -27,3 +27,6 @@ GET http://localhost:3333/api/rios_secundarios
 
 ###
 GET http://localhost:3333/api/vias_secundarias
+
+###
+GET http://localhost:3333/api/comunidades

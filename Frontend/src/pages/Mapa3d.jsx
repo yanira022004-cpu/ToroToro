@@ -17,10 +17,12 @@ export const Mapa3d = () => {
   const [riosPrincipales, setRiosPrincipales] = useState([])
   const [riosSecundarios, setRiosSecundarios] = useState([])
   const [viasSecundarias, setViasSecundarias] = useState([])
+  const [comunidades, setComunidades] = useState([])
   const [servicioSeleccionado, setServicioSeleccionado] = useState(null)
   const [atractivoSeleccionado, setAtractivoSeleccionado] = useState(null)
   const [areaSeleccionada, setAreaSeleccionada] = useState(null)
   const [localidadSeleccionada, setLocalidadSeleccionada] = useState(null)
+  const [comunidadSeleccionada, setComunidadSeleccionada] = useState(null)
   const [showPopup, setShowPopup] = useState(false)
   const [popupType, setPopupType] = useState('')
   const [mapLoaded, setMapLoaded] = useState(false)
@@ -35,9 +37,11 @@ export const Mapa3d = () => {
   const [showRiosPrincipales, setShowRiosPrincipales] = useState(true)
   const [showRiosSecundarios, setShowRiosSecundarios] = useState(true)
   const [showViasSecundarias, setShowViasSecundarias] = useState(true)
+  const [showComunidades, setShowComunidades] = useState(true)
 
   const coloresDepartamentos = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7']
   const coloresLocalidades = ['#FF9FF3', '#F368E0', '#FF9F43', '#FFCA3A', '#8AC926']
+  const coloresComunidades = ['#A78BFA', '#F472B6', '#34D399', '#FBBF24', '#60A5FA', '#EF4444', '#10B981', '#3B82F6', '#F59E0B', '#8B5CF6']
 
   // Función para limpiar capas específicas
   const cleanupLayer = (sourceId, layerIds) => {
@@ -60,6 +64,7 @@ export const Mapa3d = () => {
     setAtractivoSeleccionado(null)
     setAreaSeleccionada(null)
     setLocalidadSeleccionada(null)
+    setComunidadSeleccionada(null)
     setPopupType('')
   }
 
@@ -177,6 +182,21 @@ export const Mapa3d = () => {
       }
     }
 
+    const fetchComunidades = async () => {
+      try {
+        const res = await fetch("http://localhost:3333/api/comunidades")
+        const data = await res.json()
+        // Verificar si la respuesta es un FeatureCollection
+        if (data.type === "FeatureCollection" && data.features) {
+          setComunidades(data.features)
+        } else {
+          console.error("Formato de comunidades no válido:", data)
+        }
+      } catch (error) {
+        console.error("Error obteniendo comunidades:", error)
+      }
+    }
+
     fetchDepartamentos()
     fetchLocalidades()
     fetchAreasProtegidas()
@@ -187,6 +207,7 @@ export const Mapa3d = () => {
     fetchRiosPrincipales()
     fetchRiosSecundarios()
     fetchViasSecundarias()
+    fetchComunidades()
   }, [])
 
   useEffect(() => {
@@ -286,7 +307,8 @@ export const Mapa3d = () => {
       poligTor: ['polig-tor-fill', 'polig-tor-border'],
       riosPrincipales: ['rios-principales-layer', 'rios-principales-labels'],
       riosSecundarios: ['rios-secundarios-layer', 'rios-secundarios-labels'],
-      viasSecundarias: ['vias-secundarias-layer', 'vias-secundarias-labels']
+      viasSecundarias: ['vias-secundarias-layer', 'vias-secundarias-labels'],
+      comunidades: ['comunidades-fill', 'comunidades-border', 'comunidades-labels']
     }
 
     layers[layerType]?.forEach(layerId => {
@@ -310,6 +332,7 @@ export const Mapa3d = () => {
   useEffect(() => { toggleLayer('riosPrincipales', showRiosPrincipales) }, [showRiosPrincipales, mapLoaded])
   useEffect(() => { toggleLayer('riosSecundarios', showRiosSecundarios) }, [showRiosSecundarios, mapLoaded])
   useEffect(() => { toggleLayer('viasSecundarias', showViasSecundarias) }, [showViasSecundarias, mapLoaded])
+  useEffect(() => { toggleLayer('comunidades', showComunidades) }, [showComunidades, mapLoaded])
 
   // Eventos del mapa para mostrar información
   useEffect(() => {
@@ -336,6 +359,7 @@ export const Mapa3d = () => {
             setAtractivoSeleccionado(null)
             setAreaSeleccionada(null)
             setLocalidadSeleccionada(null)
+            setComunidadSeleccionada(null)
             setPopupType('servicio')
             setShowPopup(true)
           }
@@ -362,6 +386,7 @@ export const Mapa3d = () => {
             setServicioSeleccionado(null)
             setAreaSeleccionada(null)
             setLocalidadSeleccionada(null)
+            setComunidadSeleccionada(null)
             setPopupType('atractivo')
             setShowPopup(true)
           }
@@ -396,6 +421,7 @@ export const Mapa3d = () => {
             setServicioSeleccionado(null)
             setAtractivoSeleccionado(null)
             setLocalidadSeleccionada(null)
+            setComunidadSeleccionada(null)
             setPopupType('area')
             setShowPopup(true)
           }
@@ -420,7 +446,34 @@ export const Mapa3d = () => {
           setServicioSeleccionado(null)
           setAtractivoSeleccionado(null)
           setAreaSeleccionada(null)
+          setComunidadSeleccionada(null)
           setPopupType('localidad')
+          setShowPopup(true)
+        }
+      })
+
+      // Eventos para comunidades
+      map.current.on('mouseenter', 'comunidades-fill', () => {
+        map.current.getCanvas().style.cursor = 'pointer'
+        map.current.setPaintProperty('comunidades-fill', 'fill-opacity', 0.8)
+        map.current.setPaintProperty('comunidades-border', 'line-width', 3)
+      })
+
+      map.current.on('mouseleave', 'comunidades-fill', () => {
+        map.current.getCanvas().style.cursor = ''
+        map.current.setPaintProperty('comunidades-fill', 'fill-opacity', 0.6)
+        map.current.setPaintProperty('comunidades-border', 'line-width', 2)
+      })
+
+      map.current.on('click', 'comunidades-fill', (e) => {
+        const feature = e.features[0]
+        if (feature) {
+          setComunidadSeleccionada(feature.properties)
+          setServicioSeleccionado(null)
+          setAtractivoSeleccionado(null)
+          setAreaSeleccionada(null)
+          setLocalidadSeleccionada(null)
+          setPopupType('comunidad')
           setShowPopup(true)
         }
       })
@@ -442,9 +495,11 @@ export const Mapa3d = () => {
     } else {
       map.current.once('idle', setupMapEvents)
     }
-  }, [mapLoaded, servicios, atractivos, areasProtegidas, localidades])
+  }, [mapLoaded, servicios, atractivos, areasProtegidas, localidades, comunidades])
 
-  // Resto de los useEffect para las capas (se mantienen igual)
+  // Resto de los useEffect para las capas existentes...
+  // (Mantengo las capas existentes igual que antes)
+
   // Capa de Vías Secundarias
   useEffect(() => {
     if (!map.current || !viasSecundarias.length || !mapLoaded) return
@@ -818,6 +873,102 @@ export const Mapa3d = () => {
     }
   }, [localidades, mapLoaded, showLocalidades])
 
+  // Capa de Comunidades (POLÍGONOS)
+  useEffect(() => {
+    if (!map.current || !comunidades.length || !mapLoaded) return
+
+    const addComunidadesToMap = () => {
+      cleanupLayer('comunidades', ['comunidades-fill', 'comunidades-border', 'comunidades-labels'])
+
+      const comunidadesGeoJSON = {
+        type: 'FeatureCollection',
+        features: comunidades.map((feature, index) => ({
+          ...feature,
+          properties: {
+            ...feature.properties,
+            id: feature.properties.id,
+            nombre: feature.properties.comunidad || feature.properties.desciuloc || feature.properties.etiqueta || `Comunidad ${index + 1}`,
+            color: coloresComunidades[index % coloresComunidades.length],
+            total_poblacion: feature.properties.total,
+            hombres: feature.properties.hombre,
+            mujeres: feature.properties.mujer,
+            porcentaje_quechua: feature.properties.perc_q,
+            porcentaje_castellano: feature.properties.perc_c,
+            porcentaje_indigena: feature.properties.perc_indg,
+            porcentaje_jovenes: feature.properties.perc_15_35,
+            departamento: feature.properties.n_depto,
+            provincia: feature.properties.n_provin,
+            canton: feature.properties.n_canton,
+            quechua: feature.properties.quechua,
+            castellano: feature.properties.castellano
+          }
+        }))
+      }
+
+      map.current.addSource('comunidades', {
+        type: 'geojson',
+        data: comunidadesGeoJSON
+      })
+
+      // Capa de relleno para comunidades
+      map.current.addLayer({
+        id: 'comunidades-fill',
+        type: 'fill',
+        source: 'comunidades',
+        layout: { 'visibility': showComunidades ? 'visible' : 'none' },
+        paint: {
+          'fill-color': ['get', 'color'],
+          'fill-opacity': 0.6,
+          'fill-outline-color': '#ffffff'
+        }
+      })
+
+      // Borde de las comunidades
+      map.current.addLayer({
+        id: 'comunidades-border',
+        type: 'line',
+        source: 'comunidades',
+        layout: { 'visibility': showComunidades ? 'visible' : 'none' },
+        paint: {
+          'line-color': '#ffffff',
+          'line-width': 2,
+          'line-opacity': 0.8
+        }
+      })
+
+      // Etiquetas para comunidades
+      map.current.addLayer({
+        id: 'comunidades-labels',
+        type: 'symbol',
+        source: 'comunidades',
+        layout: {
+          'visibility': showComunidades ? 'visible' : 'none',
+          'text-field': ['get', 'nombre'],
+          'text-size': 14,
+          'text-offset': [0, 0],
+          'text-anchor': 'center'
+        },
+        paint: {
+          'text-color': '#ffffff',
+          'text-halo-color': '#000000',
+          'text-halo-width': 2
+        }
+      })
+    }
+
+    if (map.current.isStyleLoaded()) {
+      addComunidadesToMap()
+    } else {
+      map.current.once('idle', addComunidadesToMap)
+    }
+
+    return () => {
+      if (map.current) {
+        cleanupLayer('comunidades', ['comunidades-fill', 'comunidades-border', 'comunidades-labels'])
+      }
+    }
+  }, [comunidades, mapLoaded, showComunidades])
+
   useEffect(() => {
     if (!map.current || !tracks.features || tracks.features.length === 0 || !mapLoaded) return
 
@@ -1187,6 +1338,9 @@ export const Mapa3d = () => {
         <button onClick={() => setShowLocalidades(!showLocalidades)} style={toggleButtonStyles(showLocalidades)}>
           <span>🏘️</span> Localidades {showLocalidades ? '✓' : '✗'}
         </button>
+        <button onClick={() => setShowComunidades(!showComunidades)} style={toggleButtonStyles(showComunidades)}>
+          <span>👥</span> Comunidades {showComunidades ? '✓' : '✗'}
+        </button>
         <button onClick={() => setShowPoligTor(!showPoligTor)} style={toggleButtonStyles(showPoligTor)}>
           <span>📍</span> Polígono Toro Toro {showPoligTor ? '✓' : '✗'}
         </button>
@@ -1331,6 +1485,89 @@ export const Mapa3d = () => {
                   {localidadSeleccionada.subcategoria}
                 </span>
               </div>
+            </>
+          )}
+
+          {popupType === 'comunidad' && comunidadSeleccionada && (
+            <>
+              <h3 style={{ margin: '0 0 18px 0', color: '#333', borderBottom: '2px solid #a78bfa', paddingBottom: '10px', fontSize: '20px' }}>
+                👥 {comunidadSeleccionada.comunidad || comunidadSeleccionada.desciuloc || comunidadSeleccionada.etiqueta}
+              </h3>
+              
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Ubicación:</strong>
+                <div style={{ marginTop: '8px' }}>
+                  <span style={{ display: 'inline-block', background: '#a78bfa', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginRight: '8px', marginBottom: '5px' }}>
+                    {comunidadSeleccionada.n_depto}
+                  </span>
+                  <span style={{ display: 'inline-block', background: '#c4b5fd', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginRight: '8px', marginBottom: '5px' }}>
+                    {comunidadSeleccionada.n_provin}
+                  </span>
+                  <span style={{ display: 'inline-block', background: '#ddd6fe', color: '#6d28d9', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginBottom: '5px' }}>
+                    {comunidadSeleccionada.n_canton}
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Población:</strong>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginTop: '8px' }}>
+                  <div style={{ textAlign: 'center', padding: '10px', background: '#f0f9ff', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#3b82f6' }}>{comunidadSeleccionada.total}</div>
+                    <div style={{ fontSize: '12px', color: '#666' }}>Total</div>
+                  </div>
+                  <div style={{ textAlign: 'center', padding: '10px', background: '#f0fdf4', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#10b981' }}>{comunidadSeleccionada.hombre}</div>
+                    <div style={{ fontSize: '12px', color: '#666' }}>Hombres</div>
+                  </div>
+                  <div style={{ textAlign: 'center', padding: '10px', background: '#fdf2f8', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#ec4899' }}>{comunidadSeleccionada.mujer}</div>
+                    <div style={{ fontSize: '12px', color: '#666' }}>Mujeres</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Idiomas:</strong>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '8px' }}>
+                  <div style={{ textAlign: 'center', padding: '10px', background: '#fef3c7', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#d97706' }}>{comunidadSeleccionada.perc_q}%</div>
+                    <div style={{ fontSize: '12px', color: '#666' }}>Quechua</div>
+                  </div>
+                  <div style={{ textAlign: 'center', padding: '10px', background: '#dbeafe', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#1d4ed8' }}>{comunidadSeleccionada.perc_c}%</div>
+                    <div style={{ fontSize: '12px', color: '#666' }}>Castellano</div>
+                  </div>
+                </div>
+              </div>
+
+              {comunidadSeleccionada.perc_indg && (
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#666', fontSize: '16px' }}>Población Indígena:</strong>
+                  <span style={{ marginLeft: '10px', color: '#7c3aed', fontWeight: 'bold', fontSize: '16px' }}>{comunidadSeleccionada.perc_indg}%</span>
+                </div>
+              )}
+
+              {comunidadSeleccionada.perc_15_35 && (
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#666', fontSize: '16px' }}>Población Joven (15-35 años):</strong>
+                  <span style={{ marginLeft: '10px', color: '#059669', fontWeight: 'bold', fontSize: '16px' }}>{comunidadSeleccionada.perc_15_35}%</span>
+                </div>
+              )}
+
+              {comunidadSeleccionada.quechua && (
+                <div style={{ marginTop: '18px', padding: '12px', background: '#f8f9fa', borderRadius: '8px', borderLeft: '4px solid #a78bfa' }}>
+                  <strong style={{ color: '#666', display: 'block', marginBottom: '6px', fontSize: '16px' }}>Hablantes de Quechua:</strong>
+                  <span style={{ color: '#7c3aed', fontWeight: 'bold', fontSize: '16px' }}>{comunidadSeleccionada.quechua} personas</span>
+                </div>
+              )}
+
+              {comunidadSeleccionada.castellano && (
+                <div style={{ marginTop: '12px', padding: '12px', background: '#f8f9fa', borderRadius: '8px', borderLeft: '4px solid #3b82f6' }}>
+                  <strong style={{ color: '#666', display: 'block', marginBottom: '6px', fontSize: '16px' }}>Hablantes de Castellano:</strong>
+                  <span style={{ color: '#1d4ed8', fontWeight: 'bold', fontSize: '16px' }}>{comunidadSeleccionada.castellano} personas</span>
+                </div>
+              )}
             </>
           )}
         </div>
