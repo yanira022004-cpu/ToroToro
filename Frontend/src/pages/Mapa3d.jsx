@@ -19,11 +19,13 @@ export const Mapa3d = () => {
   const [viasSecundarias, setViasSecundarias] = useState([])
   const [viasPrincipales, setViasPrincipales] = useState([])
   const [comunidades, setComunidades] = useState([])
+  const [maya, setMaya] = useState([])
   const [servicioSeleccionado, setServicioSeleccionado] = useState(null)
   const [atractivoSeleccionado, setAtractivoSeleccionado] = useState(null)
   const [areaSeleccionada, setAreaSeleccionada] = useState(null)
   const [localidadSeleccionada, setLocalidadSeleccionada] = useState(null)
   const [comunidadSeleccionada, setComunidadSeleccionada] = useState(null)
+  const [mayaSeleccionada, setMayaSeleccionada] = useState(null)
   const [showPopup, setShowPopup] = useState(false)
   const [popupType, setPopupType] = useState('')
   const [mapLoaded, setMapLoaded] = useState(false)
@@ -40,6 +42,7 @@ export const Mapa3d = () => {
   const [showViasSecundarias, setShowViasSecundarias] = useState(true)
   const [showViasPrincipales, setShowViasPrincipales] = useState(true)
   const [showComunidades, setShowComunidades] = useState(true)
+  const [showMaya, setShowMaya] = useState(true)
 
   const coloresDepartamentos = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7']
   const coloresLocalidades = ['#FF9FF3', '#F368E0', '#FF9F43', '#FFCA3A', '#8AC926']
@@ -67,6 +70,7 @@ export const Mapa3d = () => {
     setAreaSeleccionada(null)
     setLocalidadSeleccionada(null)
     setComunidadSeleccionada(null)
+    setMayaSeleccionada(null)
     setPopupType('')
   }
 
@@ -209,6 +213,20 @@ export const Mapa3d = () => {
       }
     }
 
+    const fetchMaya = async () => {
+      try {
+        const res = await fetch("http://localhost:3333/api/maya")
+        const data = await res.json()
+        if (data.type === "FeatureCollection" && data.features) {
+          setMaya(data.features)
+        } else {
+          console.error("Formato de maya no válido:", data)
+        }
+      } catch (error) {
+        console.error("Error obteniendo maya:", error)
+      }
+    }
+
     fetchDepartamentos()
     fetchLocalidades()
     fetchAreasProtegidas()
@@ -221,6 +239,7 @@ export const Mapa3d = () => {
     fetchViasSecundarias()
     fetchViasPrincipales()
     fetchComunidades()
+    fetchMaya()
   }, [])
 
   useEffect(() => {
@@ -322,7 +341,8 @@ export const Mapa3d = () => {
       riosSecundarios: ['rios-secundarios-layer', 'rios-secundarios-labels'],
       viasSecundarias: ['vias-secundarias-layer', 'vias-secundarias-labels'],
       viasPrincipales: ['vias-principales-layer', 'vias-principales-labels'],
-      comunidades: ['comunidades-fill', 'comunidades-border', 'comunidades-labels']
+      comunidades: ['comunidades-fill', 'comunidades-border', 'comunidades-labels'],
+      maya: ['maya-fill', 'maya-border', 'maya-labels']
     }
 
     layers[layerType]?.forEach(layerId => {
@@ -348,6 +368,7 @@ export const Mapa3d = () => {
   useEffect(() => { toggleLayer('viasSecundarias', showViasSecundarias) }, [showViasSecundarias, mapLoaded])
   useEffect(() => { toggleLayer('viasPrincipales', showViasPrincipales) }, [showViasPrincipales, mapLoaded])
   useEffect(() => { toggleLayer('comunidades', showComunidades) }, [showComunidades, mapLoaded])
+  useEffect(() => { toggleLayer('maya', showMaya) }, [showMaya, mapLoaded])
 
   // Eventos del mapa para mostrar información
   useEffect(() => {
@@ -375,6 +396,7 @@ export const Mapa3d = () => {
             setAreaSeleccionada(null)
             setLocalidadSeleccionada(null)
             setComunidadSeleccionada(null)
+            setMayaSeleccionada(null)
             setPopupType('servicio')
             setShowPopup(true)
           }
@@ -402,6 +424,7 @@ export const Mapa3d = () => {
             setAreaSeleccionada(null)
             setLocalidadSeleccionada(null)
             setComunidadSeleccionada(null)
+            setMayaSeleccionada(null)
             setPopupType('atractivo')
             setShowPopup(true)
           }
@@ -437,6 +460,7 @@ export const Mapa3d = () => {
             setAtractivoSeleccionado(null)
             setLocalidadSeleccionada(null)
             setComunidadSeleccionada(null)
+            setMayaSeleccionada(null)
             setPopupType('area')
             setShowPopup(true)
           }
@@ -462,6 +486,7 @@ export const Mapa3d = () => {
           setAtractivoSeleccionado(null)
           setAreaSeleccionada(null)
           setComunidadSeleccionada(null)
+          setMayaSeleccionada(null)
           setPopupType('localidad')
           setShowPopup(true)
         }
@@ -488,7 +513,35 @@ export const Mapa3d = () => {
           setAtractivoSeleccionado(null)
           setAreaSeleccionada(null)
           setLocalidadSeleccionada(null)
+          setMayaSeleccionada(null)
           setPopupType('comunidad')
+          setShowPopup(true)
+        }
+      })
+
+      // Eventos para Maya (Parque Nacional)
+      map.current.on('mouseenter', 'maya-fill', () => {
+        map.current.getCanvas().style.cursor = 'pointer'
+        map.current.setPaintProperty('maya-fill', 'fill-opacity', 0.8)
+        map.current.setPaintProperty('maya-border', 'line-width', 4)
+      })
+
+      map.current.on('mouseleave', 'maya-fill', () => {
+        map.current.getCanvas().style.cursor = ''
+        map.current.setPaintProperty('maya-fill', 'fill-opacity', 0.6)
+        map.current.setPaintProperty('maya-border', 'line-width', 3)
+      })
+
+      map.current.on('click', 'maya-fill', (e) => {
+        const feature = e.features[0]
+        if (feature) {
+          setMayaSeleccionada(feature.properties)
+          setServicioSeleccionado(null)
+          setAtractivoSeleccionado(null)
+          setAreaSeleccionada(null)
+          setLocalidadSeleccionada(null)
+          setComunidadSeleccionada(null)
+          setPopupType('maya')
           setShowPopup(true)
         }
       })
@@ -510,7 +563,83 @@ export const Mapa3d = () => {
     } else {
       map.current.once('idle', setupMapEvents)
     }
-  }, [mapLoaded, servicios, atractivos, areasProtegidas, localidades, comunidades])
+  }, [mapLoaded, servicios, atractivos, areasProtegidas, localidades, comunidades, maya])
+
+  // Capa de Maya (Parque Nacional Toro Toro)
+  useEffect(() => {
+    if (!map.current || !maya.length || !mapLoaded) return
+
+    const addMayaToMap = () => {
+      cleanupLayer('maya', ['maya-fill', 'maya-border', 'maya-labels'])
+
+      const mayaGeoJSON = {
+        type: 'FeatureCollection',
+        features: maya
+      }
+
+      map.current.addSource('maya', {
+        type: 'geojson',
+        data: mayaGeoJSON
+      })
+
+      // Capa de relleno para Maya
+      map.current.addLayer({
+        id: 'maya-fill',
+        type: 'fill',
+        source: 'maya',
+        layout: { 'visibility': showMaya ? 'visible' : 'none' },
+        paint: {
+          'fill-color': '#059669',
+          'fill-opacity': 0.4,
+          'fill-outline-color': '#047857'
+        }
+      })
+
+      // Borde de Maya
+      map.current.addLayer({
+        id: 'maya-border',
+        type: 'line',
+        source: 'maya',
+        layout: { 'visibility': showMaya ? 'visible' : 'none' },
+        paint: {
+          'line-color': '#047857',
+          'line-width': 3,
+          'line-opacity': 0.8
+        }
+      })
+
+      // Etiquetas para Maya
+      map.current.addLayer({
+        id: 'maya-labels',
+        type: 'symbol',
+        source: 'maya',
+        layout: {
+          'visibility': showMaya ? 'visible' : 'none',
+          'text-field': ['get', 'nombre'],
+          'text-size': 16,
+          'text-offset': [0, 0],
+          'text-anchor': 'center'
+        },
+        paint: {
+          'text-color': '#065f46',
+          'text-halo-color': '#ffffff',
+          'text-halo-width': 2
+        }
+      })
+    }
+
+    if (map.current.isStyleLoaded()) {
+      addMayaToMap()
+    } else {
+      map.current.once('idle', addMayaToMap)
+    }
+
+    return () => {
+      if (map.current) {
+        cleanupLayer('maya', ['maya-fill', 'maya-border', 'maya-labels'])
+      }
+    }
+  }, [maya, mapLoaded, showMaya])
 
   // Capa de Vías Principales
   useEffect(() => {
@@ -1415,6 +1544,9 @@ export const Mapa3d = () => {
         <button onClick={() => setShowComunidades(!showComunidades)} style={toggleButtonStyles(showComunidades)}>
           <span>👥</span> Comunidades {showComunidades ? '✓' : '✗'}
         </button>
+        <button onClick={() => setShowMaya(!showMaya)} style={toggleButtonStyles(showMaya)}>
+          <span>🌳</span> Parque Nacional {showMaya ? '✓' : '✗'}
+        </button>
         <button onClick={() => setShowPoligTor(!showPoligTor)} style={toggleButtonStyles(showPoligTor)}>
           <span>📍</span> Polígono Toro Toro {showPoligTor ? '✓' : '✗'}
         </button>
@@ -1645,6 +1777,43 @@ export const Mapa3d = () => {
                   <span style={{ color: '#1d4ed8', fontWeight: 'bold', fontSize: '16px' }}>{comunidadSeleccionada.castellano} personas</span>
                 </div>
               )}
+            </>
+          )}
+
+          {popupType === 'maya' && mayaSeleccionada && (
+            <>
+              <h3 style={{ margin: '0 0 18px 0', color: '#333', borderBottom: '2px solid #059669', paddingBottom: '10px', fontSize: '20px' }}>
+                🌳 {mayaSeleccionada.nombre}
+              </h3>
+              
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Tipo de Área:</strong>
+                <span style={{ display: 'inline-block', background: '#059669', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {mayaSeleccionada.designa}
+                </span>
+              </div>
+
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Jurisdicción:</strong>
+                <span style={{ display: 'inline-block', background: '#047857', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {mayaSeleccionada.jurisdicci}
+                </span>
+              </div>
+
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Departamento:</strong>
+                <span style={{ display: 'inline-block', background: '#065f46', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {mayaSeleccionada.depto}
+                </span>
+              </div>
+
+              <div style={{ marginTop: '18px', padding: '12px', background: '#f0fdf4', borderRadius: '8px', borderLeft: '4px solid #059669' }}>
+                <strong style={{ color: '#666', display: 'block', marginBottom: '6px', fontSize: '16px' }}>Información del Parque Nacional:</strong>
+                <p style={{ margin: 0, color: '#065f46', lineHeight: '1.5', fontSize: '15px' }}>
+                  El Parque Nacional Toro Toro es un área protegida de Bolivia que conserva importantes 
+                  recursos naturales, culturales y paleontológicos en la región.
+                </p>
+              </div>
             </>
           )}
         </div>

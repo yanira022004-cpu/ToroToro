@@ -10,6 +10,7 @@ import { rios_secundarios } from '../controller/Rios_secundarios'
 import { viasSecundarias } from '../controller/ViasSecundarias'
 import { comunidades } from '../controller/Comunidades'
 import { viasPrincipales } from '../controller/ViasPrincipal'
+import { maya } from '../controller/mmaya'
 
 export const router = Router()
 
@@ -28,3 +29,4 @@ router.get('/rios_secundarios', rios_secundarios)
 router.get('/vias_secundarias', viasSecundarias)
 router.use('/comunidades', comunidades)
 router.get('/vias_principales', viasPrincipales)
+router.get('/maya', maya)
