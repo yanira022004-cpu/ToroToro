@@ -21,6 +21,7 @@ export const Mapa3d = () => {
   const [comunidades, setComunidades] = useState([])
   const [maya, setMaya] = useState([])
   const [municipios, setMunicipios] = useState([])
+  const [provincias, setProvincias] = useState([])
   const [servicioSeleccionado, setServicioSeleccionado] = useState(null)
   const [atractivoSeleccionado, setAtractivoSeleccionado] = useState(null)
   const [areaSeleccionada, setAreaSeleccionada] = useState(null)
@@ -28,6 +29,7 @@ export const Mapa3d = () => {
   const [comunidadSeleccionada, setComunidadSeleccionada] = useState(null)
   const [mayaSeleccionada, setMayaSeleccionada] = useState(null)
   const [municipioSeleccionado, setMunicipioSeleccionado] = useState(null)
+  const [provinciaSeleccionada, setProvinciaSeleccionada] = useState(null)
   const [showPopup, setShowPopup] = useState(false)
   const [popupType, setPopupType] = useState('')
   const [mapLoaded, setMapLoaded] = useState(false)
@@ -46,11 +48,13 @@ export const Mapa3d = () => {
   const [showComunidades, setShowComunidades] = useState(true)
   const [showMaya, setShowMaya] = useState(true)
   const [showMunicipios, setShowMunicipios] = useState(true)
+  const [showProvincias, setShowProvincias] = useState(true)
 
   const coloresDepartamentos = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7']
   const coloresLocalidades = ['#FF9FF3', '#F368E0', '#FF9F43', '#FFCA3A', '#8AC926']
   const coloresComunidades = ['#A78BFA', '#F472B6', '#34D399', '#FBBF24', '#60A5FA', '#EF4444', '#10B981', '#3B82F6', '#F59E0B', '#8B5CF6']
   const coloresMunicipios = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98FB98', '#FFD700', '#FFA07A', '#87CEEB']
+  const coloresProvincias = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98FB98', '#FFD700', '#FFA07A', '#87CEEB', '#FF69B4', '#00CED1', '#FF4500', '#32CD32', '#8A2BE2']
 
   // Función para limpiar capas específicas
   const cleanupLayer = (sourceId, layerIds) => {
@@ -76,6 +80,7 @@ export const Mapa3d = () => {
     setComunidadSeleccionada(null)
     setMayaSeleccionada(null)
     setMunicipioSeleccionado(null)
+    setProvinciaSeleccionada(null)
     setPopupType('')
   }
 
@@ -98,6 +103,20 @@ export const Mapa3d = () => {
         }
       } catch (error) {
         console.error("Error obteniendo departamentos:", error)
+      }
+    }
+
+    const fetchProvincias = async () => {
+      try {
+        const res = await fetch("http://localhost:3333/api/provincias")
+        const data = await res.json()
+        if (data.type === "FeatureCollection" && data.features) {
+          setProvincias(data.features)
+        } else {
+          console.error("Formato de provincias no válido:", data)
+        }
+      } catch (error) {
+        console.error("Error obteniendo provincias:", error)
       }
     }
 
@@ -246,6 +265,7 @@ export const Mapa3d = () => {
     }
 
     fetchDepartamentos()
+    fetchProvincias()
     fetchMunicipios()
     fetchLocalidades()
     fetchAreasProtegidas()
@@ -362,7 +382,8 @@ export const Mapa3d = () => {
       viasPrincipales: ['vias-principales-layer', 'vias-principales-labels'],
       comunidades: ['comunidades-fill', 'comunidades-border', 'comunidades-labels'],
       maya: ['maya-fill', 'maya-border', 'maya-labels'],
-      municipios: ['municipios-fill', 'municipios-border', 'municipios-labels']
+      municipios: ['municipios-fill', 'municipios-border', 'municipios-labels'],
+      provincias: ['provincias-fill', 'provincias-border', 'provincias-labels']
     }
 
     layers[layerType]?.forEach(layerId => {
@@ -390,6 +411,7 @@ export const Mapa3d = () => {
   useEffect(() => { toggleLayer('comunidades', showComunidades) }, [showComunidades, mapLoaded])
   useEffect(() => { toggleLayer('maya', showMaya) }, [showMaya, mapLoaded])
   useEffect(() => { toggleLayer('municipios', showMunicipios) }, [showMunicipios, mapLoaded])
+  useEffect(() => { toggleLayer('provincias', showProvincias) }, [showProvincias, mapLoaded])
 
   // Eventos del mapa para mostrar información
   useEffect(() => {
@@ -419,6 +441,7 @@ export const Mapa3d = () => {
             setComunidadSeleccionada(null)
             setMayaSeleccionada(null)
             setMunicipioSeleccionado(null)
+            setProvinciaSeleccionada(null)
             setPopupType('servicio')
             setShowPopup(true)
           }
@@ -448,6 +471,7 @@ export const Mapa3d = () => {
             setComunidadSeleccionada(null)
             setMayaSeleccionada(null)
             setMunicipioSeleccionado(null)
+            setProvinciaSeleccionada(null)
             setPopupType('atractivo')
             setShowPopup(true)
           }
@@ -485,6 +509,7 @@ export const Mapa3d = () => {
             setComunidadSeleccionada(null)
             setMayaSeleccionada(null)
             setMunicipioSeleccionado(null)
+            setProvinciaSeleccionada(null)
             setPopupType('area')
             setShowPopup(true)
           }
@@ -512,6 +537,7 @@ export const Mapa3d = () => {
           setComunidadSeleccionada(null)
           setMayaSeleccionada(null)
           setMunicipioSeleccionado(null)
+          setProvinciaSeleccionada(null)
           setPopupType('localidad')
           setShowPopup(true)
         }
@@ -540,6 +566,7 @@ export const Mapa3d = () => {
           setLocalidadSeleccionada(null)
           setMayaSeleccionada(null)
           setMunicipioSeleccionado(null)
+          setProvinciaSeleccionada(null)
           setPopupType('comunidad')
           setShowPopup(true)
         }
@@ -568,6 +595,7 @@ export const Mapa3d = () => {
           setLocalidadSeleccionada(null)
           setComunidadSeleccionada(null)
           setMunicipioSeleccionado(null)
+          setProvinciaSeleccionada(null)
           setPopupType('maya')
           setShowPopup(true)
         }
@@ -596,7 +624,37 @@ export const Mapa3d = () => {
           setLocalidadSeleccionada(null)
           setComunidadSeleccionada(null)
           setMayaSeleccionada(null)
+          setProvinciaSeleccionada(null)
           setPopupType('municipio')
+          setShowPopup(true)
+        }
+      })
+
+      // Eventos para Provincias
+      map.current.on('mouseenter', 'provincias-fill', () => {
+        map.current.getCanvas().style.cursor = 'pointer'
+        map.current.setPaintProperty('provincias-fill', 'fill-opacity', 0.8)
+        map.current.setPaintProperty('provincias-border', 'line-width', 3)
+      })
+
+      map.current.on('mouseleave', 'provincias-fill', () => {
+        map.current.getCanvas().style.cursor = ''
+        map.current.setPaintProperty('provincias-fill', 'fill-opacity', 0.6)
+        map.current.setPaintProperty('provincias-border', 'line-width', 2)
+      })
+
+      map.current.on('click', 'provincias-fill', (e) => {
+        const feature = e.features[0]
+        if (feature) {
+          setProvinciaSeleccionada(feature.properties)
+          setServicioSeleccionado(null)
+          setAtractivoSeleccionado(null)
+          setAreaSeleccionada(null)
+          setLocalidadSeleccionada(null)
+          setComunidadSeleccionada(null)
+          setMayaSeleccionada(null)
+          setMunicipioSeleccionado(null)
+          setPopupType('provincia')
           setShowPopup(true)
         }
       })
@@ -618,7 +676,96 @@ export const Mapa3d = () => {
     } else {
       map.current.once('idle', setupMapEvents)
     }
-  }, [mapLoaded, servicios, atractivos, areasProtegidas, localidades, comunidades, maya, municipios])
+  }, [mapLoaded, servicios, atractivos, areasProtegidas, localidades, comunidades, maya, municipios, provincias])
+
+  // Capa de Provincias
+  useEffect(() => {
+    if (!map.current || !provincias.length || !mapLoaded) return
+
+    const addProvinciasToMap = () => {
+      cleanupLayer('provincias', ['provincias-fill', 'provincias-border', 'provincias-labels'])
+
+      const provinciasGeoJSON = {
+        type: 'FeatureCollection',
+        features: provincias.map((feature, index) => ({
+          ...feature,
+          properties: {
+            ...feature.properties,
+            color: coloresProvincias[index % coloresProvincias.length],
+            nombre: feature.properties.provincia || `Provincia ${index + 1}`,
+            departamento: feature.properties.departamen,
+            c_ut: feature.properties.c_ut,
+            c_ut_d: feature.properties.c_ut_d,
+            shape_leng: feature.properties.shape_leng,
+            shape_area: feature.properties.shape_area
+          }
+        }))
+      }
+
+      map.current.addSource('provincias', {
+        type: 'geojson',
+        data: provinciasGeoJSON
+      })
+
+      // Capa de relleno para provincias
+      map.current.addLayer({
+        id: 'provincias-fill',
+        type: 'fill',
+        source: 'provincias',
+        layout: { 'visibility': showProvincias ? 'visible' : 'none' },
+        paint: {
+          'fill-color': ['get', 'color'],
+          'fill-opacity': 0.4,
+          'fill-outline-color': '#ffffff'
+        }
+      })
+
+      // Borde de las provincias
+      map.current.addLayer({
+        id: 'provincias-border',
+        type: 'line',
+        source: 'provincias',
+        layout: { 'visibility': showProvincias ? 'visible' : 'none' },
+        paint: {
+          'line-color': '#ffffff',
+          'line-width': 2,
+          'line-opacity': 0.8
+        }
+      })
+
+      // Etiquetas para provincias
+      map.current.addLayer({
+        id: 'provincias-labels',
+        type: 'symbol',
+        source: 'provincias',
+        layout: {
+          'visibility': showProvincias ? 'visible' : 'none',
+          'text-field': ['get', 'nombre'],
+          'text-size': 12,
+          'text-offset': [0, 0],
+          'text-anchor': 'center',
+          'text-optional': true
+        },
+        paint: {
+          'text-color': '#ffffff',
+          'text-halo-color': '#000000',
+          'text-halo-width': 2
+        }
+      })
+    }
+
+    if (map.current.isStyleLoaded()) {
+      addProvinciasToMap()
+    } else {
+      map.current.once('idle', addProvinciasToMap)
+    }
+
+    return () => {
+      if (map.current) {
+        cleanupLayer('provincias', ['provincias-fill', 'provincias-border', 'provincias-labels'])
+      }
+    }
+  }, [provincias, mapLoaded, showProvincias])
 
   // Capa de Municipios
   useEffect(() => {
@@ -1682,6 +1829,9 @@ export const Mapa3d = () => {
         <button onClick={() => setShowDepartamentos(!showDepartamentos)} style={toggleButtonStyles(showDepartamentos)}>
           <span>🗺️</span> Departamentos {showDepartamentos ? '✓' : '✗'}
         </button>
+        <button onClick={() => setShowProvincias(!showProvincias)} style={toggleButtonStyles(showProvincias)}>
+          <span>🏛️</span> Provincias {showProvincias ? '✓' : '✗'}
+        </button>
         <button onClick={() => setShowMunicipios(!showMunicipios)} style={toggleButtonStyles(showMunicipios)}>
           <span>🏛️</span> Municipios {showMunicipios ? '✓' : '✗'}
         </button>
@@ -2010,6 +2160,50 @@ export const Mapa3d = () => {
                 <p style={{ margin: 0, color: '#1e40af', lineHeight: '1.5', fontSize: '15px' }}>
                   Este municipio forma parte de la organización territorial de Bolivia y representa 
                   una unidad administrativa local con su propia identidad y características.
+                </p>
+              </div>
+            </>
+          )}
+
+          {popupType === 'provincia' && provinciaSeleccionada && (
+            <>
+              <h3 style={{ margin: '0 0 18px 0', color: '#333', borderBottom: '2px solid #FF6B6B', paddingBottom: '10px', fontSize: '20px' }}>
+                🏛️ {provinciaSeleccionada.provincia}
+              </h3>
+              
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Provincia:</strong>
+                <span style={{ display: 'inline-block', background: '#FF6B6B', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {provinciaSeleccionada.provincia}
+                </span>
+              </div>
+
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Departamento:</strong>
+                <span style={{ display: 'inline-block', background: '#4ECDC4', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {provinciaSeleccionada.departamen}
+                </span>
+              </div>
+
+              {provinciaSeleccionada.c_ut && (
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#666', fontSize: '16px' }}>Código UT:</strong>
+                  <span style={{ marginLeft: '10px', color: '#059669', fontWeight: 'bold', fontSize: '16px' }}>{provinciaSeleccionada.c_ut}</span>
+                </div>
+              )}
+
+              {provinciaSeleccionada.shape_area && (
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#666', fontSize: '16px' }}>Área:</strong>
+                  <span style={{ marginLeft: '10px', color: '#3b82f6', fontWeight: 'bold', fontSize: '16px' }}>{parseFloat(provinciaSeleccionada.shape_area).toFixed(2)} km²</span>
+                </div>
+              )}
+
+              <div style={{ marginTop: '18px', padding: '12px', background: '#fff5f5', borderRadius: '8px', borderLeft: '4px solid #FF6B6B' }}>
+                <strong style={{ color: '#666', display: 'block', marginBottom: '6px', fontSize: '16px' }}>Información de la Provincia:</strong>
+                <p style={{ margin: 0, color: '#dc2626', lineHeight: '1.5', fontSize: '15px' }}>
+                  Esta provincia forma parte de la división territorial intermedia de Bolivia, 
+                  entre departamentos y municipios, con características geográficas y culturales propias.
                 </p>
               </div>
             </>

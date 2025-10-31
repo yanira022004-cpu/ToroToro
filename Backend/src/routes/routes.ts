@@ -12,6 +12,7 @@ import { comunidades } from '../controller/Comunidades'
 import { viasPrincipales } from '../controller/ViasPrincipal'
 import { maya } from '../controller/mmaya'
 import { municipios } from '../controller/Municipio'
+import { provincias } from '../controller/Provincia'
 
 export const router = Router()
 
@@ -32,3 +33,4 @@ router.use('/comunidades', comunidades)
 router.get('/vias_principales', viasPrincipales)
 router.get('/maya', maya)
 router.get('/municipios', municipios)
+router.get('/provincias', provincias)

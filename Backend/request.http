@@ -39,3 +39,6 @@ GET http://localhost:3333/api/maya
 
 ###
 GET http://localhost:3333/api/municipios
+
+###
+GET http://localhost:3333/api/provincias
