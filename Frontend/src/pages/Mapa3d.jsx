@@ -23,6 +23,7 @@ export const Mapa3d = () => {
   const [municipios, setMunicipios] = useState([])
   const [provincias, setProvincias] = useState([])
   const [cuencas, setCuencas] = useState([])
+  const [suelos, setSuelos] = useState([])
   const [servicioSeleccionado, setServicioSeleccionado] = useState(null)
   const [atractivoSeleccionado, setAtractivoSeleccionado] = useState(null)
   const [areaSeleccionada, setAreaSeleccionada] = useState(null)
@@ -51,6 +52,7 @@ export const Mapa3d = () => {
   const [showMunicipios, setShowMunicipios] = useState(true)
   const [showProvincias, setShowProvincias] = useState(true)
   const [showCuencas, setShowCuencas] = useState(true)
+  const [showSuelos, setShowSuelos] = useState(true)
 
   const coloresDepartamentos = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7']
   const coloresLocalidades = ['#FF9FF3', '#F368E0', '#FF9F43', '#FFCA3A', '#8AC926']
@@ -58,6 +60,7 @@ export const Mapa3d = () => {
   const coloresMunicipios = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98FB98', '#FFD700', '#FFA07A', '#87CEEB']
   const coloresProvincias = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98FB98', '#FFD700', '#FFA07A', '#87CEEB', '#FF69B4', '#00CED1', '#FF4500', '#32CD32', '#8A2BE2']
   const coloresCuencas = ['#1E40AF', '#1D4ED8', '#2563EB', '#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE', '#DBEAFE']
+  const coloresSuelos = ['#8B4513', '#A0522D', '#CD853F', '#D2691E', '#F4A460', '#DEB887', '#D2B48C', '#BC8F8F', '#A52A2A', '#800000']
 
   // Función para limpiar capas específicas
   const cleanupLayer = (sourceId, layerIds) => {
@@ -281,6 +284,20 @@ export const Mapa3d = () => {
       }
     }
 
+    const fetchSuelos = async () => {
+      try {
+        const res = await fetch("http://localhost:3333/api/suelos")
+        const data = await res.json()
+        if (data.type === "FeatureCollection" && data.features) {
+          setSuelos(data.features)
+        } else {
+          console.error("Formato de suelos no válido:", data)
+        }
+      } catch (error) {
+        console.error("Error obteniendo suelos:", error)
+      }
+    }
+
     fetchDepartamentos()
     fetchProvincias()
     fetchMunicipios()
@@ -297,6 +314,7 @@ export const Mapa3d = () => {
     fetchViasPrincipales()
     fetchComunidades()
     fetchMaya()
+    fetchSuelos()
   }, [])
 
   useEffect(() => {
@@ -402,7 +420,8 @@ export const Mapa3d = () => {
       maya: ['maya-fill', 'maya-border', 'maya-labels'],
       municipios: ['municipios-fill', 'municipios-border', 'municipios-labels'],
       provincias: ['provincias-fill', 'provincias-border', 'provincias-labels'],
-      cuencas: ['cuencas-fill', 'cuencas-border']
+      cuencas: ['cuencas-fill', 'cuencas-border'],
+      suelos: ['suelos-fill', 'suelos-border']
     }
 
     layers[layerType]?.forEach(layerId => {
@@ -432,6 +451,7 @@ export const Mapa3d = () => {
   useEffect(() => { toggleLayer('municipios', showMunicipios) }, [showMunicipios, mapLoaded])
   useEffect(() => { toggleLayer('provincias', showProvincias) }, [showProvincias, mapLoaded])
   useEffect(() => { toggleLayer('cuencas', showCuencas) }, [showCuencas, mapLoaded])
+  useEffect(() => { toggleLayer('suelos', showSuelos) }, [showSuelos, mapLoaded])
 
   // Eventos del mapa para mostrar información
   useEffect(() => {
@@ -689,6 +709,17 @@ export const Mapa3d = () => {
         map.current.getCanvas().style.cursor = ''
         map.current.setPaintProperty('departamentos-fill', 'fill-opacity', 0.6)
       })
+
+      // Eventos para suelos (solo hover, sin popup)
+      map.current.on('mouseenter', 'suelos-fill', () => {
+        map.current.getCanvas().style.cursor = 'pointer'
+        map.current.setPaintProperty('suelos-fill', 'fill-opacity', 0.8)
+      })
+
+      map.current.on('mouseleave', 'suelos-fill', () => {
+        map.current.getCanvas().style.cursor = ''
+        map.current.setPaintProperty('suelos-fill', 'fill-opacity', 0.6)
+      })
     }
 
     if (map.current.isStyleLoaded()) {
@@ -697,6 +728,69 @@ export const Mapa3d = () => {
       map.current.once('idle', setupMapEvents)
     }
   }, [mapLoaded, servicios, atractivos, areasProtegidas, localidades, comunidades, maya, municipios, provincias])
+
+  // Capa de Suelos (SOLO VISUALIZACIÓN - SIN POPUP)
+  useEffect(() => {
+    if (!map.current || !suelos.length || !mapLoaded) return
+
+    const addSuelosToMap = () => {
+      cleanupLayer('suelos', ['suelos-fill', 'suelos-border'])
+
+      const suelosGeoJSON = {
+        type: 'FeatureCollection',
+        features: suelos.map((feature, index) => ({
+          ...feature,
+          properties: {
+            ...feature.properties,
+            color: coloresSuelos[index % coloresSuelos.length]
+          }
+        }))
+      }
+
+      map.current.addSource('suelos', {
+        type: 'geojson',
+        data: suelosGeoJSON
+      })
+
+      // Capa de relleno para suelos
+      map.current.addLayer({
+        id: 'suelos-fill',
+        type: 'fill',
+        source: 'suelos',
+        layout: { 'visibility': showSuelos ? 'visible' : 'none' },
+        paint: {
+          'fill-color': ['get', 'color'],
+          'fill-opacity': 0.4,
+          'fill-outline-color': '#8B4513'
+        }
+      })
+
+      // Borde de los suelos
+      map.current.addLayer({
+        id: 'suelos-border',
+        type: 'line',
+        source: 'suelos',
+        layout: { 'visibility': showSuelos ? 'visible' : 'none' },
+        paint: {
+          'line-color': '#8B4513',
+          'line-width': 2,
+          'line-opacity': 0.7
+        }
+      })
+    }
+
+    if (map.current.isStyleLoaded()) {
+      addSuelosToMap()
+    } else {
+      map.current.once('idle', addSuelosToMap)
+    }
+
+    return () => {
+      if (map.current) {
+        cleanupLayer('suelos', ['suelos-fill', 'suelos-border'])
+      }
+    }
+  }, [suelos, mapLoaded, showSuelos])
 
   // Capa de Cuencas (SOLO VISUALIZACIÓN - SIN POPUP)
   useEffect(() => {
@@ -1944,6 +2038,9 @@ export const Mapa3d = () => {
         </button>
         <button onClick={() => setShowViasSecundarias(!showViasSecundarias)} style={toggleButtonStyles(showViasSecundarias)}>
           <span>🛣️</span> Vías Secundarias {showViasSecundarias ? '✓' : '✗'}
+        </button>
+        <button onClick={() => setShowSuelos(!showSuelos)} style={toggleButtonStyles(showSuelos)}>
+          <span>🌱</span> Suelos {showSuelos ? '✓' : '✗'}
         </button>
       </div>
       

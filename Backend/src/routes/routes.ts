@@ -14,6 +14,7 @@ import { maya } from '../controller/mmaya'
 import { municipios } from '../controller/Municipio'
 import { provincias } from '../controller/Provincia'
 import { cuencas } from '../controller/Cuencas'
+import { suelos } from '../controller/suelos'
 
 export const router = Router()
 
@@ -36,3 +37,4 @@ router.get('/maya', maya)
 router.get('/municipios', municipios)
 router.get('/provincias', provincias)
 router.get('/cuencas', cuencas)
+router.get('/suelos', suelos)

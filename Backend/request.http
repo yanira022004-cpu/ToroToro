@@ -45,3 +45,6 @@ GET http://localhost:3333/api/provincias
 
 ###
 GET http://localhost:3333/api/cuencas
+
+###
+GET http://localhost:3333/api/suelos
