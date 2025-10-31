@@ -20,12 +20,14 @@ export const Mapa3d = () => {
   const [viasPrincipales, setViasPrincipales] = useState([])
   const [comunidades, setComunidades] = useState([])
   const [maya, setMaya] = useState([])
+  const [municipios, setMunicipios] = useState([])
   const [servicioSeleccionado, setServicioSeleccionado] = useState(null)
   const [atractivoSeleccionado, setAtractivoSeleccionado] = useState(null)
   const [areaSeleccionada, setAreaSeleccionada] = useState(null)
   const [localidadSeleccionada, setLocalidadSeleccionada] = useState(null)
   const [comunidadSeleccionada, setComunidadSeleccionada] = useState(null)
   const [mayaSeleccionada, setMayaSeleccionada] = useState(null)
+  const [municipioSeleccionado, setMunicipioSeleccionado] = useState(null)
   const [showPopup, setShowPopup] = useState(false)
   const [popupType, setPopupType] = useState('')
   const [mapLoaded, setMapLoaded] = useState(false)
@@ -43,10 +45,12 @@ export const Mapa3d = () => {
   const [showViasPrincipales, setShowViasPrincipales] = useState(true)
   const [showComunidades, setShowComunidades] = useState(true)
   const [showMaya, setShowMaya] = useState(true)
+  const [showMunicipios, setShowMunicipios] = useState(true)
 
   const coloresDepartamentos = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7']
   const coloresLocalidades = ['#FF9FF3', '#F368E0', '#FF9F43', '#FFCA3A', '#8AC926']
   const coloresComunidades = ['#A78BFA', '#F472B6', '#34D399', '#FBBF24', '#60A5FA', '#EF4444', '#10B981', '#3B82F6', '#F59E0B', '#8B5CF6']
+  const coloresMunicipios = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98FB98', '#FFD700', '#FFA07A', '#87CEEB']
 
   // Función para limpiar capas específicas
   const cleanupLayer = (sourceId, layerIds) => {
@@ -71,6 +75,7 @@ export const Mapa3d = () => {
     setLocalidadSeleccionada(null)
     setComunidadSeleccionada(null)
     setMayaSeleccionada(null)
+    setMunicipioSeleccionado(null)
     setPopupType('')
   }
 
@@ -93,6 +98,20 @@ export const Mapa3d = () => {
         }
       } catch (error) {
         console.error("Error obteniendo departamentos:", error)
+      }
+    }
+
+    const fetchMunicipios = async () => {
+      try {
+        const res = await fetch("http://localhost:3333/api/municipios")
+        const data = await res.json()
+        if (data.type === "FeatureCollection" && data.features) {
+          setMunicipios(data.features)
+        } else {
+          console.error("Formato de municipios no válido:", data)
+        }
+      } catch (error) {
+        console.error("Error obteniendo municipios:", error)
       }
     }
 
@@ -202,7 +221,6 @@ export const Mapa3d = () => {
       try {
         const res = await fetch("http://localhost:3333/api/comunidades")
         const data = await res.json()
-        // Verificar si la respuesta es un FeatureCollection
         if (data.type === "FeatureCollection" && data.features) {
           setComunidades(data.features)
         } else {
@@ -228,6 +246,7 @@ export const Mapa3d = () => {
     }
 
     fetchDepartamentos()
+    fetchMunicipios()
     fetchLocalidades()
     fetchAreasProtegidas()
     fetchAtractivos()
@@ -342,7 +361,8 @@ export const Mapa3d = () => {
       viasSecundarias: ['vias-secundarias-layer', 'vias-secundarias-labels'],
       viasPrincipales: ['vias-principales-layer', 'vias-principales-labels'],
       comunidades: ['comunidades-fill', 'comunidades-border', 'comunidades-labels'],
-      maya: ['maya-fill', 'maya-border', 'maya-labels']
+      maya: ['maya-fill', 'maya-border', 'maya-labels'],
+      municipios: ['municipios-fill', 'municipios-border', 'municipios-labels']
     }
 
     layers[layerType]?.forEach(layerId => {
@@ -369,6 +389,7 @@ export const Mapa3d = () => {
   useEffect(() => { toggleLayer('viasPrincipales', showViasPrincipales) }, [showViasPrincipales, mapLoaded])
   useEffect(() => { toggleLayer('comunidades', showComunidades) }, [showComunidades, mapLoaded])
   useEffect(() => { toggleLayer('maya', showMaya) }, [showMaya, mapLoaded])
+  useEffect(() => { toggleLayer('municipios', showMunicipios) }, [showMunicipios, mapLoaded])
 
   // Eventos del mapa para mostrar información
   useEffect(() => {
@@ -397,6 +418,7 @@ export const Mapa3d = () => {
             setLocalidadSeleccionada(null)
             setComunidadSeleccionada(null)
             setMayaSeleccionada(null)
+            setMunicipioSeleccionado(null)
             setPopupType('servicio')
             setShowPopup(true)
           }
@@ -425,6 +447,7 @@ export const Mapa3d = () => {
             setLocalidadSeleccionada(null)
             setComunidadSeleccionada(null)
             setMayaSeleccionada(null)
+            setMunicipioSeleccionado(null)
             setPopupType('atractivo')
             setShowPopup(true)
           }
@@ -461,6 +484,7 @@ export const Mapa3d = () => {
             setLocalidadSeleccionada(null)
             setComunidadSeleccionada(null)
             setMayaSeleccionada(null)
+            setMunicipioSeleccionado(null)
             setPopupType('area')
             setShowPopup(true)
           }
@@ -487,6 +511,7 @@ export const Mapa3d = () => {
           setAreaSeleccionada(null)
           setComunidadSeleccionada(null)
           setMayaSeleccionada(null)
+          setMunicipioSeleccionado(null)
           setPopupType('localidad')
           setShowPopup(true)
         }
@@ -514,6 +539,7 @@ export const Mapa3d = () => {
           setAreaSeleccionada(null)
           setLocalidadSeleccionada(null)
           setMayaSeleccionada(null)
+          setMunicipioSeleccionado(null)
           setPopupType('comunidad')
           setShowPopup(true)
         }
@@ -541,7 +567,36 @@ export const Mapa3d = () => {
           setAreaSeleccionada(null)
           setLocalidadSeleccionada(null)
           setComunidadSeleccionada(null)
+          setMunicipioSeleccionado(null)
           setPopupType('maya')
+          setShowPopup(true)
+        }
+      })
+
+      // Eventos para Municipios
+      map.current.on('mouseenter', 'municipios-fill', () => {
+        map.current.getCanvas().style.cursor = 'pointer'
+        map.current.setPaintProperty('municipios-fill', 'fill-opacity', 0.8)
+        map.current.setPaintProperty('municipios-border', 'line-width', 3)
+      })
+
+      map.current.on('mouseleave', 'municipios-fill', () => {
+        map.current.getCanvas().style.cursor = ''
+        map.current.setPaintProperty('municipios-fill', 'fill-opacity', 0.6)
+        map.current.setPaintProperty('municipios-border', 'line-width', 2)
+      })
+
+      map.current.on('click', 'municipios-fill', (e) => {
+        const feature = e.features[0]
+        if (feature) {
+          setMunicipioSeleccionado(feature.properties)
+          setServicioSeleccionado(null)
+          setAtractivoSeleccionado(null)
+          setAreaSeleccionada(null)
+          setLocalidadSeleccionada(null)
+          setComunidadSeleccionada(null)
+          setMayaSeleccionada(null)
+          setPopupType('municipio')
           setShowPopup(true)
         }
       })
@@ -563,7 +618,96 @@ export const Mapa3d = () => {
     } else {
       map.current.once('idle', setupMapEvents)
     }
-  }, [mapLoaded, servicios, atractivos, areasProtegidas, localidades, comunidades, maya])
+  }, [mapLoaded, servicios, atractivos, areasProtegidas, localidades, comunidades, maya, municipios])
+
+  // Capa de Municipios
+  useEffect(() => {
+    if (!map.current || !municipios.length || !mapLoaded) return
+
+    const addMunicipiosToMap = () => {
+      cleanupLayer('municipios', ['municipios-fill', 'municipios-border', 'municipios-labels'])
+
+      const municipiosGeoJSON = {
+        type: 'FeatureCollection',
+        features: municipios.map((feature, index) => ({
+          ...feature,
+          properties: {
+            ...feature.properties,
+            color: coloresMunicipios[index % coloresMunicipios.length],
+            nombre: feature.properties.capital || feature.properties.municipio || `Municipio ${index + 1}`,
+            departamento: feature.properties.departamen,
+            provincia: feature.properties.provincia,
+            municipio: feature.properties.municipio,
+            capital: feature.properties.capital,
+            area_mun_h: feature.properties.area_mun_h
+          }
+        }))
+      }
+
+      map.current.addSource('municipios', {
+        type: 'geojson',
+        data: municipiosGeoJSON
+      })
+
+      // Capa de relleno para municipios
+      map.current.addLayer({
+        id: 'municipios-fill',
+        type: 'fill',
+        source: 'municipios',
+        layout: { 'visibility': showMunicipios ? 'visible' : 'none' },
+        paint: {
+          'fill-color': ['get', 'color'],
+          'fill-opacity': 0.5,
+          'fill-outline-color': '#ffffff'
+        }
+      })
+
+      // Borde de los municipios
+      map.current.addLayer({
+        id: 'municipios-border',
+        type: 'line',
+        source: 'municipios',
+        layout: { 'visibility': showMunicipios ? 'visible' : 'none' },
+        paint: {
+          'line-color': '#ffffff',
+          'line-width': 2,
+          'line-opacity': 0.8
+        }
+      })
+
+      // Etiquetas para municipios
+      map.current.addLayer({
+        id: 'municipios-labels',
+        type: 'symbol',
+        source: 'municipios',
+        layout: {
+          'visibility': showMunicipios ? 'visible' : 'none',
+          'text-field': ['get', 'nombre'],
+          'text-size': 14,
+          'text-offset': [0, 0],
+          'text-anchor': 'center',
+          'text-optional': true
+        },
+        paint: {
+          'text-color': '#ffffff',
+          'text-halo-color': '#000000',
+          'text-halo-width': 2
+        }
+      })
+    }
+
+    if (map.current.isStyleLoaded()) {
+      addMunicipiosToMap()
+    } else {
+      map.current.once('idle', addMunicipiosToMap)
+    }
+
+    return () => {
+      if (map.current) {
+        cleanupLayer('municipios', ['municipios-fill', 'municipios-border', 'municipios-labels'])
+      }
+    }
+  }, [municipios, mapLoaded, showMunicipios])
 
   // Capa de Maya (Parque Nacional Toro Toro)
   useEffect(() => {
@@ -1538,6 +1682,9 @@ export const Mapa3d = () => {
         <button onClick={() => setShowDepartamentos(!showDepartamentos)} style={toggleButtonStyles(showDepartamentos)}>
           <span>🗺️</span> Departamentos {showDepartamentos ? '✓' : '✗'}
         </button>
+        <button onClick={() => setShowMunicipios(!showMunicipios)} style={toggleButtonStyles(showMunicipios)}>
+          <span>🏛️</span> Municipios {showMunicipios ? '✓' : '✗'}
+        </button>
         <button onClick={() => setShowLocalidades(!showLocalidades)} style={toggleButtonStyles(showLocalidades)}>
           <span>🏘️</span> Localidades {showLocalidades ? '✓' : '✗'}
         </button>
@@ -1812,6 +1959,57 @@ export const Mapa3d = () => {
                 <p style={{ margin: 0, color: '#065f46', lineHeight: '1.5', fontSize: '15px' }}>
                   El Parque Nacional Toro Toro es un área protegida de Bolivia que conserva importantes 
                   recursos naturales, culturales y paleontológicos en la región.
+                </p>
+              </div>
+            </>
+          )}
+
+          {popupType === 'municipio' && municipioSeleccionado && (
+            <>
+              <h3 style={{ margin: '0 0 18px 0', color: '#333', borderBottom: '2px solid #4ECDC4', paddingBottom: '10px', fontSize: '20px' }}>
+                🏛️ {municipioSeleccionado.capital || municipioSeleccionado.municipio}
+              </h3>
+              
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Municipio:</strong>
+                <span style={{ display: 'inline-block', background: '#4ECDC4', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {municipioSeleccionado.municipio}
+                </span>
+              </div>
+
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Capital:</strong>
+                <span style={{ display: 'inline-block', background: '#45B7D1', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {municipioSeleccionado.capital}
+                </span>
+              </div>
+
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Departamento:</strong>
+                <span style={{ display: 'inline-block', background: '#FF6B6B', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {municipioSeleccionado.departamen}
+                </span>
+              </div>
+
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Provincia:</strong>
+                <span style={{ display: 'inline-block', background: '#96CEB4', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {municipioSeleccionado.provincia}
+                </span>
+              </div>
+
+              {municipioSeleccionado.area_mun_h && (
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#666', fontSize: '16px' }}>Área Municipal:</strong>
+                  <span style={{ marginLeft: '10px', color: '#059669', fontWeight: 'bold', fontSize: '16px' }}>{municipioSeleccionado.area_mun_h} ha</span>
+                </div>
+              )}
+
+              <div style={{ marginTop: '18px', padding: '12px', background: '#f0f9ff', borderRadius: '8px', borderLeft: '4px solid #4ECDC4' }}>
+                <strong style={{ color: '#666', display: 'block', marginBottom: '6px', fontSize: '16px' }}>Información del Municipio:</strong>
+                <p style={{ margin: 0, color: '#1e40af', lineHeight: '1.5', fontSize: '15px' }}>
+                  Este municipio forma parte de la organización territorial de Bolivia y representa 
+                  una unidad administrativa local con su propia identidad y características.
                 </p>
               </div>
             </>

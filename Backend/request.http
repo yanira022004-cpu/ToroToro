@@ -36,3 +36,6 @@ GET http://localhost:3333/api/vias_principales
 
 ###
 GET http://localhost:3333/api/maya
+
+###
+GET http://localhost:3333/api/municipios
