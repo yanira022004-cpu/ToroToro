@@ -9,6 +9,7 @@ import { rios_principales } from '../controller/Rios_principales'
 import { rios_secundarios } from '../controller/Rios_secundarios'
 import { viasSecundarias } from '../controller/ViasSecundarias'
 import { comunidades } from '../controller/Comunidades'
+import { viasPrincipales } from '../controller/ViasPrincipal'
 
 export const router = Router()
 
@@ -26,3 +27,4 @@ router.get('/rios_principales', rios_principales)
 router.get('/rios_secundarios', rios_secundarios)
 router.get('/vias_secundarias', viasSecundarias)
 router.use('/comunidades', comunidades)
+router.get('/vias_principales', viasPrincipales)

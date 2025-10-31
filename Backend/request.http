@@ -30,3 +30,6 @@ GET http://localhost:3333/api/vias_secundarias
 
 ###
 GET http://localhost:3333/api/comunidades
+
+###
+GET http://localhost:3333/api/vias_principales

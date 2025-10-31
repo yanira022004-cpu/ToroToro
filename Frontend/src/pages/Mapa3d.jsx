@@ -17,6 +17,7 @@ export const Mapa3d = () => {
   const [riosPrincipales, setRiosPrincipales] = useState([])
   const [riosSecundarios, setRiosSecundarios] = useState([])
   const [viasSecundarias, setViasSecundarias] = useState([])
+  const [viasPrincipales, setViasPrincipales] = useState([])
   const [comunidades, setComunidades] = useState([])
   const [servicioSeleccionado, setServicioSeleccionado] = useState(null)
   const [atractivoSeleccionado, setAtractivoSeleccionado] = useState(null)
@@ -37,6 +38,7 @@ export const Mapa3d = () => {
   const [showRiosPrincipales, setShowRiosPrincipales] = useState(true)
   const [showRiosSecundarios, setShowRiosSecundarios] = useState(true)
   const [showViasSecundarias, setShowViasSecundarias] = useState(true)
+  const [showViasPrincipales, setShowViasPrincipales] = useState(true)
   const [showComunidades, setShowComunidades] = useState(true)
 
   const coloresDepartamentos = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7']
@@ -182,6 +184,16 @@ export const Mapa3d = () => {
       }
     }
 
+    const fetchViasPrincipales = async () => {
+      try {
+        const res = await fetch("http://localhost:3333/api/vias_principales")
+        const data = await res.json()
+        setViasPrincipales(data.features || [])
+      } catch (error) {
+        console.error("Error obteniendo vías principales:", error)
+      }
+    }
+
     const fetchComunidades = async () => {
       try {
         const res = await fetch("http://localhost:3333/api/comunidades")
@@ -207,6 +219,7 @@ export const Mapa3d = () => {
     fetchRiosPrincipales()
     fetchRiosSecundarios()
     fetchViasSecundarias()
+    fetchViasPrincipales()
     fetchComunidades()
   }, [])
 
@@ -308,6 +321,7 @@ export const Mapa3d = () => {
       riosPrincipales: ['rios-principales-layer', 'rios-principales-labels'],
       riosSecundarios: ['rios-secundarios-layer', 'rios-secundarios-labels'],
       viasSecundarias: ['vias-secundarias-layer', 'vias-secundarias-labels'],
+      viasPrincipales: ['vias-principales-layer', 'vias-principales-labels'],
       comunidades: ['comunidades-fill', 'comunidades-border', 'comunidades-labels']
     }
 
@@ -332,6 +346,7 @@ export const Mapa3d = () => {
   useEffect(() => { toggleLayer('riosPrincipales', showRiosPrincipales) }, [showRiosPrincipales, mapLoaded])
   useEffect(() => { toggleLayer('riosSecundarios', showRiosSecundarios) }, [showRiosSecundarios, mapLoaded])
   useEffect(() => { toggleLayer('viasSecundarias', showViasSecundarias) }, [showViasSecundarias, mapLoaded])
+  useEffect(() => { toggleLayer('viasPrincipales', showViasPrincipales) }, [showViasPrincipales, mapLoaded])
   useEffect(() => { toggleLayer('comunidades', showComunidades) }, [showComunidades, mapLoaded])
 
   // Eventos del mapa para mostrar información
@@ -497,8 +512,67 @@ export const Mapa3d = () => {
     }
   }, [mapLoaded, servicios, atractivos, areasProtegidas, localidades, comunidades])
 
-  // Resto de los useEffect para las capas existentes...
-  // (Mantengo las capas existentes igual que antes)
+  // Capa de Vías Principales
+  useEffect(() => {
+    if (!map.current || !viasPrincipales.length || !mapLoaded) return
+
+    const addViasPrincipalesToMap = () => {
+      cleanupLayer('vias-principales', ['vias-principales-layer', 'vias-principales-labels'])
+
+      const viasPrincipalesGeoJSON = {
+        type: 'FeatureCollection',
+        features: viasPrincipales
+      }
+
+      map.current.addSource('vias-principales', {
+        type: 'geojson',
+        data: viasPrincipalesGeoJSON
+      })
+
+      map.current.addLayer({
+        id: 'vias-principales-layer',
+        type: 'line',
+        source: 'vias-principales',
+        layout: { 'visibility': showViasPrincipales ? 'visible' : 'none' },
+        paint: {
+          'line-color': '#dc2626',
+          'line-width': 4,
+          'line-opacity': 0.9
+        }
+      })
+
+      map.current.addLayer({
+        id: 'vias-principales-labels',
+        type: 'symbol',
+        source: 'vias-principales',
+        layout: {
+          'visibility': showViasPrincipales ? 'visible' : 'none',
+          'text-field': ['get', 'nombre'],
+          'text-size': 12,
+          'text-offset': [0, 0],
+          'text-anchor': 'center',
+          'text-optional': true
+        },
+        paint: {
+          'text-color': '#dc2626',
+          'text-halo-color': '#ffffff',
+          'text-halo-width': 2
+        }
+      })
+    }
+
+    if (map.current.isStyleLoaded()) {
+      addViasPrincipalesToMap()
+    } else {
+      map.current.once("idle", addViasPrincipalesToMap)
+    }
+
+    return () => {
+      if (map.current) {
+        cleanupLayer('vias-principales', ['vias-principales-layer', 'vias-principales-labels'])
+      }
+    }
+  }, [viasPrincipales, mapLoaded, showViasPrincipales])
 
   // Capa de Vías Secundarias
   useEffect(() => {
@@ -1349,6 +1423,9 @@ export const Mapa3d = () => {
         </button>
         <button onClick={() => setShowRiosSecundarios(!showRiosSecundarios)} style={toggleButtonStyles(showRiosSecundarios)}>
           <span>💧</span> Ríos Secundarios {showRiosSecundarios ? '✓' : '✗'}
+        </button>
+        <button onClick={() => setShowViasPrincipales(!showViasPrincipales)} style={toggleButtonStyles(showViasPrincipales)}>
+          <span>🛣️</span> Vías Principales {showViasPrincipales ? '✓' : '✗'}
         </button>
         <button onClick={() => setShowViasSecundarias(!showViasSecundarias)} style={toggleButtonStyles(showViasSecundarias)}>
           <span>🛣️</span> Vías Secundarias {showViasSecundarias ? '✓' : '✗'}
