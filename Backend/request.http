@@ -42,3 +42,6 @@ GET http://localhost:3333/api/municipios
 
 ###
 GET http://localhost:3333/api/provincias
+
+###
+GET http://localhost:3333/api/cuencas

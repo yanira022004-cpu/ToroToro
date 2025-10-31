@@ -22,6 +22,7 @@ export const Mapa3d = () => {
   const [maya, setMaya] = useState([])
   const [municipios, setMunicipios] = useState([])
   const [provincias, setProvincias] = useState([])
+  const [cuencas, setCuencas] = useState([])
   const [servicioSeleccionado, setServicioSeleccionado] = useState(null)
   const [atractivoSeleccionado, setAtractivoSeleccionado] = useState(null)
   const [areaSeleccionada, setAreaSeleccionada] = useState(null)
@@ -49,12 +50,14 @@ export const Mapa3d = () => {
   const [showMaya, setShowMaya] = useState(true)
   const [showMunicipios, setShowMunicipios] = useState(true)
   const [showProvincias, setShowProvincias] = useState(true)
+  const [showCuencas, setShowCuencas] = useState(true)
 
   const coloresDepartamentos = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7']
   const coloresLocalidades = ['#FF9FF3', '#F368E0', '#FF9F43', '#FFCA3A', '#8AC926']
   const coloresComunidades = ['#A78BFA', '#F472B6', '#34D399', '#FBBF24', '#60A5FA', '#EF4444', '#10B981', '#3B82F6', '#F59E0B', '#8B5CF6']
   const coloresMunicipios = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98FB98', '#FFD700', '#FFA07A', '#87CEEB']
   const coloresProvincias = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98FB98', '#FFD700', '#FFA07A', '#87CEEB', '#FF69B4', '#00CED1', '#FF4500', '#32CD32', '#8A2BE2']
+  const coloresCuencas = ['#1E40AF', '#1D4ED8', '#2563EB', '#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE', '#DBEAFE']
 
   // Función para limpiar capas específicas
   const cleanupLayer = (sourceId, layerIds) => {
@@ -131,6 +134,20 @@ export const Mapa3d = () => {
         }
       } catch (error) {
         console.error("Error obteniendo municipios:", error)
+      }
+    }
+
+    const fetchCuencas = async () => {
+      try {
+        const res = await fetch("http://localhost:3333/api/cuencas")
+        const data = await res.json()
+        if (data.type === "FeatureCollection" && data.features) {
+          setCuencas(data.features)
+        } else {
+          console.error("Formato de cuencas no válido:", data)
+        }
+      } catch (error) {
+        console.error("Error obteniendo cuencas:", error)
       }
     }
 
@@ -267,6 +284,7 @@ export const Mapa3d = () => {
     fetchDepartamentos()
     fetchProvincias()
     fetchMunicipios()
+    fetchCuencas()
     fetchLocalidades()
     fetchAreasProtegidas()
     fetchAtractivos()
@@ -383,7 +401,8 @@ export const Mapa3d = () => {
       comunidades: ['comunidades-fill', 'comunidades-border', 'comunidades-labels'],
       maya: ['maya-fill', 'maya-border', 'maya-labels'],
       municipios: ['municipios-fill', 'municipios-border', 'municipios-labels'],
-      provincias: ['provincias-fill', 'provincias-border', 'provincias-labels']
+      provincias: ['provincias-fill', 'provincias-border', 'provincias-labels'],
+      cuencas: ['cuencas-fill', 'cuencas-border']
     }
 
     layers[layerType]?.forEach(layerId => {
@@ -412,6 +431,7 @@ export const Mapa3d = () => {
   useEffect(() => { toggleLayer('maya', showMaya) }, [showMaya, mapLoaded])
   useEffect(() => { toggleLayer('municipios', showMunicipios) }, [showMunicipios, mapLoaded])
   useEffect(() => { toggleLayer('provincias', showProvincias) }, [showProvincias, mapLoaded])
+  useEffect(() => { toggleLayer('cuencas', showCuencas) }, [showCuencas, mapLoaded])
 
   // Eventos del mapa para mostrar información
   useEffect(() => {
@@ -677,6 +697,69 @@ export const Mapa3d = () => {
       map.current.once('idle', setupMapEvents)
     }
   }, [mapLoaded, servicios, atractivos, areasProtegidas, localidades, comunidades, maya, municipios, provincias])
+
+  // Capa de Cuencas (SOLO VISUALIZACIÓN - SIN POPUP)
+  useEffect(() => {
+    if (!map.current || !cuencas.length || !mapLoaded) return
+
+    const addCuencasToMap = () => {
+      cleanupLayer('cuencas', ['cuencas-fill', 'cuencas-border'])
+
+      const cuencasGeoJSON = {
+        type: 'FeatureCollection',
+        features: cuencas.map((feature, index) => ({
+          ...feature,
+          properties: {
+            ...feature.properties,
+            color: coloresCuencas[index % coloresCuencas.length]
+          }
+        }))
+      }
+
+      map.current.addSource('cuencas', {
+        type: 'geojson',
+        data: cuencasGeoJSON
+      })
+
+      // Capa de relleno para cuencas
+      map.current.addLayer({
+        id: 'cuencas-fill',
+        type: 'fill',
+        source: 'cuencas',
+        layout: { 'visibility': showCuencas ? 'visible' : 'none' },
+        paint: {
+          'fill-color': ['get', 'color'],
+          'fill-opacity': 0.3,
+          'fill-outline-color': '#1E40AF'
+        }
+      })
+
+      // Borde de las cuencas
+      map.current.addLayer({
+        id: 'cuencas-border',
+        type: 'line',
+        source: 'cuencas',
+        layout: { 'visibility': showCuencas ? 'visible' : 'none' },
+        paint: {
+          'line-color': '#1E40AF',
+          'line-width': 2,
+          'line-opacity': 0.7
+        }
+      })
+    }
+
+    if (map.current.isStyleLoaded()) {
+      addCuencasToMap()
+    } else {
+      map.current.once('idle', addCuencasToMap)
+    }
+
+    return () => {
+      if (map.current) {
+        cleanupLayer('cuencas', ['cuencas-fill', 'cuencas-border'])
+      }
+    }
+  }, [cuencas, mapLoaded, showCuencas])
 
   // Capa de Provincias
   useEffect(() => {
@@ -1194,7 +1277,7 @@ export const Mapa3d = () => {
       map.current.addSource('polig-tor', {
         type: 'geojson',
         data: poligTorGeoJSON
-      })
+      });
 
       map.current.addLayer({
         id: 'polig-tor-fill',
@@ -1202,11 +1285,11 @@ export const Mapa3d = () => {
         source: 'polig-tor',
         layout: { 'visibility': showPoligTor ? 'visible' : 'none' },
         paint: {
-          'fill-color': '#9333ea',
+          'fill-color': '#ffbf00', // narnja 
           'fill-opacity': 0.3,
-          'fill-outline-color': '#7c3aed'
+          'fill-outline-color': '#ff0000' // color rojo
         }
-      })
+      });
 
       map.current.addLayer({
         id: 'polig-tor-border',
@@ -1218,21 +1301,21 @@ export const Mapa3d = () => {
           'line-width': 3,
           'line-opacity': 0.8
         }
-      })
-    }
+      });
+        }
 
-    if (map.current.isStyleLoaded()) {
+        if (map.current.isStyleLoaded()) {
       addPoligTorToMap()
-    } else {
+        } else {
       map.current.once("idle", addPoligTorToMap)
-    }
+        }
 
-    return () => {
+        return () => {
       if (map.current) {
         cleanupLayer('polig-tor', ['polig-tor-fill', 'polig-tor-border'])
       }
-    }
-  }, [poligTor, mapLoaded, showPoligTor])
+        }
+      }, [poligTor, mapLoaded, showPoligTor])
 
   useEffect(() => {
     if (!map.current || !departamentos.length || !mapLoaded) return
@@ -1834,6 +1917,9 @@ export const Mapa3d = () => {
         </button>
         <button onClick={() => setShowMunicipios(!showMunicipios)} style={toggleButtonStyles(showMunicipios)}>
           <span>🏛️</span> Municipios {showMunicipios ? '✓' : '✗'}
+        </button>
+        <button onClick={() => setShowCuencas(!showCuencas)} style={toggleButtonStyles(showCuencas)}>
+          <span>🌊</span> Cuencas {showCuencas ? '✓' : '✗'}
         </button>
         <button onClick={() => setShowLocalidades(!showLocalidades)} style={toggleButtonStyles(showLocalidades)}>
           <span>🏘️</span> Localidades {showLocalidades ? '✓' : '✗'}
