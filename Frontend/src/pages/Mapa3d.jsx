@@ -24,6 +24,9 @@ export const Mapa3d = () => {
   const [provincias, setProvincias] = useState([])
   const [cuencas, setCuencas] = useState([])
   const [suelos, setSuelos] = useState([])
+  const [vegetacion, setVegetacion] = useState([])
+  const [sistemasTierra, setSistemasTierra] = useState([])
+  
   const [servicioSeleccionado, setServicioSeleccionado] = useState(null)
   const [atractivoSeleccionado, setAtractivoSeleccionado] = useState(null)
   const [areaSeleccionada, setAreaSeleccionada] = useState(null)
@@ -32,27 +35,32 @@ export const Mapa3d = () => {
   const [mayaSeleccionada, setMayaSeleccionada] = useState(null)
   const [municipioSeleccionado, setMunicipioSeleccionado] = useState(null)
   const [provinciaSeleccionada, setProvinciaSeleccionada] = useState(null)
+  const [vegetacionSeleccionada, setVegetacionSeleccionada] = useState(null)
+  const [sistemaTierraSeleccionado, setSistemaTierraSeleccionado] = useState(null)
+  
   const [showPopup, setShowPopup] = useState(false)
   const [popupType, setPopupType] = useState('')
   const [mapLoaded, setMapLoaded] = useState(false)
   
-  const [showServicios, setShowServicios] = useState(true)
-  const [showAtractivos, setShowAtractivos] = useState(true)
-  const [showTracks, setShowTracks] = useState(true)
-  const [showAreas, setShowAreas] = useState(true)
-  const [showDepartamentos, setShowDepartamentos] = useState(true)
-  const [showLocalidades, setShowLocalidades] = useState(true)
-  const [showPoligTor, setShowPoligTor] = useState(true)
-  const [showRiosPrincipales, setShowRiosPrincipales] = useState(true)
-  const [showRiosSecundarios, setShowRiosSecundarios] = useState(true)
-  const [showViasSecundarias, setShowViasSecundarias] = useState(true)
-  const [showViasPrincipales, setShowViasPrincipales] = useState(true)
-  const [showComunidades, setShowComunidades] = useState(true)
-  const [showMaya, setShowMaya] = useState(true)
-  const [showMunicipios, setShowMunicipios] = useState(true)
-  const [showProvincias, setShowProvincias] = useState(true)
-  const [showCuencas, setShowCuencas] = useState(true)
-  const [showSuelos, setShowSuelos] = useState(true)
+  const [showServicios, setShowServicios] = useState(false)
+  const [showAtractivos, setShowAtractivos] = useState(false)
+  const [showTracks, setShowTracks] = useState(false)
+  const [showAreas, setShowAreas] = useState(false)
+  const [showDepartamentos, setShowDepartamentos] = useState(false)
+  const [showLocalidades, setShowLocalidades] = useState(false)
+  const [showPoligTor, setShowPoligTor] = useState(false)
+  const [showRiosPrincipales, setShowRiosPrincipales] = useState(false)
+  const [showRiosSecundarios, setShowRiosSecundarios] = useState(false)
+  const [showViasSecundarias, setShowViasSecundarias] = useState(false)
+  const [showViasPrincipales, setShowViasPrincipales] = useState(false)
+  const [showComunidades, setShowComunidades] = useState(false)
+  const [showMaya, setShowMaya] = useState(false)
+  const [showMunicipios, setShowMunicipios] = useState(false)
+  const [showProvincias, setShowProvincias] = useState(false)
+  const [showCuencas, setShowCuencas] = useState(false)
+  const [showSuelos, setShowSuelos] = useState(false)
+  const [showVegetacion, setShowVegetacion] = useState(false)
+  const [showSistemasTierra, setShowSistemasTierra] = useState(false)
 
   const coloresDepartamentos = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7']
   const coloresLocalidades = ['#FF9FF3', '#F368E0', '#FF9F43', '#FFCA3A', '#8AC926']
@@ -61,6 +69,31 @@ export const Mapa3d = () => {
   const coloresProvincias = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98FB98', '#FFD700', '#FFA07A', '#87CEEB', '#FF69B4', '#00CED1', '#FF4500', '#32CD32', '#8A2BE2']
   const coloresCuencas = ['#1E40AF', '#1D4ED8', '#2563EB', '#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE', '#DBEAFE']
   const coloresSuelos = ['#8B4513', '#A0522D', '#CD853F', '#D2691E', '#F4A460', '#DEB887', '#D2B48C', '#BC8F8F', '#A52A2A', '#800000']
+  const coloresVegetacion = ['#228B22', '#32CD32', '#90EE90', '#98FB98', '#00FF00', '#7CFC00', '#00FF7F', '#3CB371', '#2E8B57', '#006400']
+  const coloresSistemasTierra = ['#8B4513', '#A0522D', '#CD853F', '#D2691E', '#F4A460', '#DEB887', '#D2B48C', '#BC8F8F', '#A52A2A', '#800000', '#FF6347', '#FF7F50', '#FF8C00', '#FFA500', '#FFD700']
+
+  // Función para obtener el color según el tipo de sistema de tierra
+  const getColorSistemaTierra = (codigo) => {
+    const colores = {
+      'Ib1': '#8B4513',
+      'Ib2': '#A0522D',
+      'Ib3': '#CD853F',
+      'Ic1': '#D2691E',
+      'Ic2': '#F4A460',
+      'Ia1': '#DEB887',
+      'Ia2': '#D2B48C',
+      'IIa1': '#BC8F8F',
+      'IIa2': '#A52A2A',
+      'IIb1': '#800000',
+      'IIb2': '#FF6347',
+      'IIc1': '#FF7F50',
+      'IIIa1': '#FF8C00',
+      'IIIa2': '#FFA500',
+      'IIIb1': '#FFD700',
+      'default': '#8B4513'
+    }
+    return colores[codigo] || colores['default']
+  }
 
   // Función para limpiar capas específicas
   const cleanupLayer = (sourceId, layerIds) => {
@@ -87,6 +120,8 @@ export const Mapa3d = () => {
     setMayaSeleccionada(null)
     setMunicipioSeleccionado(null)
     setProvinciaSeleccionada(null)
+    setVegetacionSeleccionada(null)
+    setSistemaTierraSeleccionado(null)
     setPopupType('')
   }
 
@@ -99,7 +134,35 @@ export const Mapa3d = () => {
     }
   }
 
+  // Función para obtener el color según el tipo de vegetación
+  const getColorVegetacion = (tipo) => {
+    const colores = {
+      'Matorral ralo deciduo': '#228B22',
+      'Bosque denso': '#006400',
+      'Bosque ralo': '#32CD32',
+      'Pastizal': '#90EE90',
+      'Vegetación arbustiva': '#7CFC00',
+      'Vegetación herbácea': '#98FB98',
+      'default': '#3CB371'
+    }
+    return colores[tipo] || colores['default']
+  }
+
   useEffect(() => {
+    const fetchSistemasTierra = async () => {
+      try {
+        const res = await fetch("http://localhost:3333/api/sistemas_tierra")
+        const data = await res.json()
+        if (data.type === "FeatureCollection" && data.features) {
+          setSistemasTierra(data.features)
+        } else {
+          console.error("Formato de sistemas de tierra no válido:", data)
+        }
+      } catch (error) {
+        console.error("Error obteniendo sistemas de tierra:", error)
+      }
+    }
+
     const fetchDepartamentos = async () => {
       try {
         const res = await fetch("http://localhost:3333/api/departamentos")
@@ -298,6 +361,21 @@ export const Mapa3d = () => {
       }
     }
 
+    const fetchVegetacion = async () => {
+      try {
+        const res = await fetch("http://localhost:3333/api/vegetacion")
+        const data = await res.json()
+        if (data.type === "FeatureCollection" && data.features) {
+          setVegetacion(data.features)
+        } else {
+          console.error("Formato de vegetación no válido:", data)
+        }
+      } catch (error) {
+        console.error("Error obteniendo vegetación:", error)
+      }
+    }
+
+    fetchSistemasTierra()
     fetchDepartamentos()
     fetchProvincias()
     fetchMunicipios()
@@ -315,6 +393,7 @@ export const Mapa3d = () => {
     fetchComunidades()
     fetchMaya()
     fetchSuelos()
+    fetchVegetacion()
   }, [])
 
   useEffect(() => {
@@ -421,7 +500,9 @@ export const Mapa3d = () => {
       municipios: ['municipios-fill', 'municipios-border', 'municipios-labels'],
       provincias: ['provincias-fill', 'provincias-border', 'provincias-labels'],
       cuencas: ['cuencas-fill', 'cuencas-border'],
-      suelos: ['suelos-fill', 'suelos-border']
+      suelos: ['suelos-fill', 'suelos-border'],
+      vegetacion: ['vegetacion-fill', 'vegetacion-border', 'vegetacion-labels'],
+      sistemasTierra: ['sistemas-tierra-fill', 'sistemas-tierra-border', 'sistemas-tierra-labels']
     }
 
     layers[layerType]?.forEach(layerId => {
@@ -452,6 +533,8 @@ export const Mapa3d = () => {
   useEffect(() => { toggleLayer('provincias', showProvincias) }, [showProvincias, mapLoaded])
   useEffect(() => { toggleLayer('cuencas', showCuencas) }, [showCuencas, mapLoaded])
   useEffect(() => { toggleLayer('suelos', showSuelos) }, [showSuelos, mapLoaded])
+  useEffect(() => { toggleLayer('vegetacion', showVegetacion) }, [showVegetacion, mapLoaded])
+  useEffect(() => { toggleLayer('sistemasTierra', showSistemasTierra) }, [showSistemasTierra, mapLoaded])
 
   // Eventos del mapa para mostrar información
   useEffect(() => {
@@ -482,6 +565,8 @@ export const Mapa3d = () => {
             setMayaSeleccionada(null)
             setMunicipioSeleccionado(null)
             setProvinciaSeleccionada(null)
+            setVegetacionSeleccionada(null)
+            setSistemaTierraSeleccionado(null)
             setPopupType('servicio')
             setShowPopup(true)
           }
@@ -512,6 +597,8 @@ export const Mapa3d = () => {
             setMayaSeleccionada(null)
             setMunicipioSeleccionado(null)
             setProvinciaSeleccionada(null)
+            setVegetacionSeleccionada(null)
+            setSistemaTierraSeleccionado(null)
             setPopupType('atractivo')
             setShowPopup(true)
           }
@@ -550,6 +637,8 @@ export const Mapa3d = () => {
             setMayaSeleccionada(null)
             setMunicipioSeleccionado(null)
             setProvinciaSeleccionada(null)
+            setVegetacionSeleccionada(null)
+            setSistemaTierraSeleccionado(null)
             setPopupType('area')
             setShowPopup(true)
           }
@@ -578,6 +667,8 @@ export const Mapa3d = () => {
           setMayaSeleccionada(null)
           setMunicipioSeleccionado(null)
           setProvinciaSeleccionada(null)
+          setVegetacionSeleccionada(null)
+          setSistemaTierraSeleccionado(null)
           setPopupType('localidad')
           setShowPopup(true)
         }
@@ -607,6 +698,8 @@ export const Mapa3d = () => {
           setMayaSeleccionada(null)
           setMunicipioSeleccionado(null)
           setProvinciaSeleccionada(null)
+          setVegetacionSeleccionada(null)
+          setSistemaTierraSeleccionado(null)
           setPopupType('comunidad')
           setShowPopup(true)
         }
@@ -636,6 +729,8 @@ export const Mapa3d = () => {
           setComunidadSeleccionada(null)
           setMunicipioSeleccionado(null)
           setProvinciaSeleccionada(null)
+          setVegetacionSeleccionada(null)
+          setSistemaTierraSeleccionado(null)
           setPopupType('maya')
           setShowPopup(true)
         }
@@ -665,6 +760,8 @@ export const Mapa3d = () => {
           setComunidadSeleccionada(null)
           setMayaSeleccionada(null)
           setProvinciaSeleccionada(null)
+          setVegetacionSeleccionada(null)
+          setSistemaTierraSeleccionado(null)
           setPopupType('municipio')
           setShowPopup(true)
         }
@@ -694,7 +791,71 @@ export const Mapa3d = () => {
           setComunidadSeleccionada(null)
           setMayaSeleccionada(null)
           setMunicipioSeleccionado(null)
+          setVegetacionSeleccionada(null)
+          setSistemaTierraSeleccionado(null)
           setPopupType('provincia')
+          setShowPopup(true)
+        }
+      })
+
+      // Eventos para Vegetación
+      map.current.on('mouseenter', 'vegetacion-fill', () => {
+        map.current.getCanvas().style.cursor = 'pointer'
+        map.current.setPaintProperty('vegetacion-fill', 'fill-opacity', 0.8)
+        map.current.setPaintProperty('vegetacion-border', 'line-width', 3)
+      })
+
+      map.current.on('mouseleave', 'vegetacion-fill', () => {
+        map.current.getCanvas().style.cursor = ''
+        map.current.setPaintProperty('vegetacion-fill', 'fill-opacity', 0.5)
+        map.current.setPaintProperty('vegetacion-border', 'line-width', 2)
+      })
+
+      map.current.on('click', 'vegetacion-fill', (e) => {
+        const feature = e.features[0]
+        if (feature) {
+          setVegetacionSeleccionada(feature.properties)
+          setServicioSeleccionado(null)
+          setAtractivoSeleccionado(null)
+          setAreaSeleccionada(null)
+          setLocalidadSeleccionada(null)
+          setComunidadSeleccionada(null)
+          setMayaSeleccionada(null)
+          setMunicipioSeleccionado(null)
+          setProvinciaSeleccionada(null)
+          setSistemaTierraSeleccionado(null)
+          setPopupType('vegetacion')
+          setShowPopup(true)
+        }
+      })
+
+      // Eventos para Sistemas de Tierra
+      map.current.on('mouseenter', 'sistemas-tierra-fill', () => {
+        map.current.getCanvas().style.cursor = 'pointer'
+        map.current.setPaintProperty('sistemas-tierra-fill', 'fill-opacity', 0.8)
+        map.current.setPaintProperty('sistemas-tierra-border', 'line-width', 3)
+      })
+
+      map.current.on('mouseleave', 'sistemas-tierra-fill', () => {
+        map.current.getCanvas().style.cursor = ''
+        map.current.setPaintProperty('sistemas-tierra-fill', 'fill-opacity', 0.5)
+        map.current.setPaintProperty('sistemas-tierra-border', 'line-width', 2)
+      })
+
+      map.current.on('click', 'sistemas-tierra-fill', (e) => {
+        const feature = e.features[0]
+        if (feature) {
+          setSistemaTierraSeleccionado(feature.properties)
+          setServicioSeleccionado(null)
+          setAtractivoSeleccionado(null)
+          setAreaSeleccionada(null)
+          setLocalidadSeleccionada(null)
+          setComunidadSeleccionada(null)
+          setMayaSeleccionada(null)
+          setMunicipioSeleccionado(null)
+          setProvinciaSeleccionada(null)
+          setVegetacionSeleccionada(null)
+          setPopupType('sistemaTierra')
           setShowPopup(true)
         }
       })
@@ -727,9 +888,197 @@ export const Mapa3d = () => {
     } else {
       map.current.once('idle', setupMapEvents)
     }
-  }, [mapLoaded, servicios, atractivos, areasProtegidas, localidades, comunidades, maya, municipios, provincias])
+  }, [mapLoaded, servicios, atractivos, areasProtegidas, localidades, comunidades, maya, municipios, provincias, vegetacion, sistemasTierra])
 
-  // Capa de Suelos (SOLO VISUALIZACIÓN - SIN POPUP)
+  // Capa de Sistemas de Tierra
+  useEffect(() => {
+    if (!map.current || !sistemasTierra.length || !mapLoaded) return
+
+    const addSistemasTierraToMap = () => {
+      cleanupLayer('sistemas-tierra', ['sistemas-tierra-fill', 'sistemas-tierra-border', 'sistemas-tierra-labels'])
+
+      const sistemasTierraGeoJSON = {
+        type: 'FeatureCollection',
+        features: sistemasTierra.map((feature, index) => ({
+          ...feature,
+          properties: {
+            ...feature.properties,
+            color: getColorSistemaTierra(feature.properties.codigo),
+            codigo: feature.properties.codigo || 'Sin código',
+            prov_tierr: feature.properties.prov_tierr || 'Sin provincia',
+            desc_fisio: feature.properties.desc_fisio || 'Sin descripción fisiográfica',
+            region_tie: feature.properties.region_tie || 'Sin región',
+            desc_regio: feature.properties.desc_regio || 'Sin descripción regional',
+            comp_regio: feature.properties.comp_regio || 'Sin composición',
+            base_sist_: feature.properties.base_sist_ || 'Sin base',
+            cod_des: feature.properties.cod_des || 'Sin código descriptivo',
+            hectares: feature.properties.hectares,
+            shape_leng: feature.properties.shape_leng,
+            shape_area: feature.properties.shape_area,
+            ogc_fid: feature.properties.ogc_fid,
+            objectid: feature.properties.objectid,
+            sis_tierra: feature.properties.sis_tierra
+          }
+        }))
+      }
+
+      map.current.addSource('sistemas-tierra', {
+        type: 'geojson',
+        data: sistemasTierraGeoJSON
+      })
+
+      // Capa de relleno para sistemas de tierra
+      map.current.addLayer({
+        id: 'sistemas-tierra-fill',
+        type: 'fill',
+        source: 'sistemas-tierra',
+        layout: { 'visibility': showSistemasTierra ? 'visible' : 'none' },
+        paint: {
+          'fill-color': ['get', 'color'],
+          'fill-opacity': 0.5,
+          'fill-outline-color': '#8B4513'
+        }
+      })
+
+      // Borde de los sistemas de tierra
+      map.current.addLayer({
+        id: 'sistemas-tierra-border',
+        type: 'line',
+        source: 'sistemas-tierra',
+        layout: { 'visibility': showSistemasTierra ? 'visible' : 'none' },
+        paint: {
+          'line-color': '#8B4513',
+          'line-width': 2,
+          'line-opacity': 0.7
+        }
+      })
+
+      // Etiquetas para sistemas de tierra
+      map.current.addLayer({
+        id: 'sistemas-tierra-labels',
+        type: 'symbol',
+        source: 'sistemas-tierra',
+        layout: {
+          'visibility': showSistemasTierra ? 'visible' : 'none',
+          'text-field': ['get', 'codigo'],
+          'text-size': 12,
+          'text-offset': [0, 0],
+          'text-anchor': 'center',
+          'text-optional': true
+        },
+        paint: {
+          'text-color': '#ffffff',
+          'text-halo-color': '#000000',
+          'text-halo-width': 2
+        }
+      })
+    }
+
+    if (map.current.isStyleLoaded()) {
+      addSistemasTierraToMap()
+    } else {
+      map.current.once('idle', addSistemasTierraToMap)
+    }
+
+    return () => {
+      if (map.current) {
+        cleanupLayer('sistemas-tierra', ['sistemas-tierra-fill', 'sistemas-tierra-border', 'sistemas-tierra-labels'])
+      }
+    }
+  }, [sistemasTierra, mapLoaded, showSistemasTierra])
+
+  // Capa de Vegetación
+  useEffect(() => {
+    if (!map.current || !vegetacion.length || !mapLoaded) return
+
+    const addVegetacionToMap = () => {
+      cleanupLayer('vegetacion', ['vegetacion-fill', 'vegetacion-border', 'vegetacion-labels'])
+
+      const vegetacionGeoJSON = {
+        type: 'FeatureCollection',
+        features: vegetacion.map((feature, index) => ({
+          ...feature,
+          properties: {
+            ...feature.properties,
+            color: getColorVegetacion(feature.properties.tipos_veg),
+            codveg: feature.properties.codveg || 'Sin código',
+            tipos_veg: feature.properties.tipos_veg || 'Sin tipo especificado',
+            shape_area: feature.properties.shape_area,
+            shape_leng: feature.properties.shape_leng,
+            ogc_fid: feature.properties.ogc_fid,
+            gml_id: feature.properties.gml_id,
+            id_c: feature.properties.id_c,
+            _errors: feature.properties._errors
+          }
+        }))
+      }
+
+      map.current.addSource('vegetacion', {
+        type: 'geojson',
+        data: vegetacionGeoJSON
+      })
+
+      // Capa de relleno para vegetación
+      map.current.addLayer({
+        id: 'vegetacion-fill',
+        type: 'fill',
+        source: 'vegetacion',
+        layout: { 'visibility': showVegetacion ? 'visible' : 'none' },
+        paint: {
+          'fill-color': ['get', 'color'],
+          'fill-opacity': 0.5,
+          'fill-outline-color': '#228B22'
+        }
+      })
+
+      // Borde de la vegetación
+      map.current.addLayer({
+        id: 'vegetacion-border',
+        type: 'line',
+        source: 'vegetacion',
+        layout: { 'visibility': showVegetacion ? 'visible' : 'none' },
+        paint: {
+          'line-color': '#228B22',
+          'line-width': 2,
+          'line-opacity': 0.7
+        }
+      })
+
+      // Etiquetas para vegetación
+      map.current.addLayer({
+        id: 'vegetacion-labels',
+        type: 'symbol',
+        source: 'vegetacion',
+        layout: {
+          'visibility': showVegetacion ? 'visible' : 'none',
+          'text-field': ['get', 'tipos_veg'],
+          'text-size': 12,
+          'text-offset': [0, 0],
+          'text-anchor': 'center',
+          'text-optional': true
+        },
+        paint: {
+          'text-color': '#ffffff',
+          'text-halo-color': '#000000',
+          'text-halo-width': 2
+        }
+      })
+    }
+
+    if (map.current.isStyleLoaded()) {
+      addVegetacionToMap()
+    } else {
+      map.current.once('idle', addVegetacionToMap)
+    }
+
+    return () => {
+      if (map.current) {
+        cleanupLayer('vegetacion', ['vegetacion-fill', 'vegetacion-border', 'vegetacion-labels'])
+      }
+    }
+  }, [vegetacion, mapLoaded, showVegetacion])
+
+  // Capa de Suelos
   useEffect(() => {
     if (!map.current || !suelos.length || !mapLoaded) return
 
@@ -792,7 +1141,7 @@ export const Mapa3d = () => {
     }
   }, [suelos, mapLoaded, showSuelos])
 
-  // Capa de Cuencas (SOLO VISUALIZACIÓN - SIN POPUP)
+  // Capa de Cuencas
   useEffect(() => {
     if (!map.current || !cuencas.length || !mapLoaded) return
 
@@ -1357,6 +1706,7 @@ export const Mapa3d = () => {
     }
   }, [riosSecundarios, mapLoaded, showRiosSecundarios])
 
+  // Capa de Polígono Toro Toro
   useEffect(() => {
     if (!map.current || !poligTor.length || !mapLoaded) return
 
@@ -1379,9 +1729,9 @@ export const Mapa3d = () => {
         source: 'polig-tor',
         layout: { 'visibility': showPoligTor ? 'visible' : 'none' },
         paint: {
-          'fill-color': '#ffbf00', // narnja 
+          'fill-color': '#ffbf00',
           'fill-opacity': 0.3,
-          'fill-outline-color': '#ff0000' // color rojo
+          'fill-outline-color': '#ff0000'
         }
       });
 
@@ -1396,21 +1746,22 @@ export const Mapa3d = () => {
           'line-opacity': 0.8
         }
       });
-        }
+    }
 
-        if (map.current.isStyleLoaded()) {
+    if (map.current.isStyleLoaded()) {
       addPoligTorToMap()
-        } else {
+    } else {
       map.current.once("idle", addPoligTorToMap)
-        }
+    }
 
-        return () => {
+    return () => {
       if (map.current) {
         cleanupLayer('polig-tor', ['polig-tor-fill', 'polig-tor-border'])
       }
-        }
-      }, [poligTor, mapLoaded, showPoligTor])
+    }
+  }, [poligTor, mapLoaded, showPoligTor])
 
+  // Capa de Departamentos
   useEffect(() => {
     if (!map.current || !departamentos.length || !mapLoaded) return
 
@@ -1472,6 +1823,7 @@ export const Mapa3d = () => {
     }
   }, [departamentos, mapLoaded, showDepartamentos])
 
+  // Capa de Localidades
   useEffect(() => {
     if (!map.current || !localidades.length || !mapLoaded) return
 
@@ -1544,7 +1896,7 @@ export const Mapa3d = () => {
     }
   }, [localidades, mapLoaded, showLocalidades])
 
-  // Capa de Comunidades (POLÍGONOS)
+  // Capa de Comunidades
   useEffect(() => {
     if (!map.current || !comunidades.length || !mapLoaded) return
 
@@ -1640,6 +1992,7 @@ export const Mapa3d = () => {
     }
   }, [comunidades, mapLoaded, showComunidades])
 
+  // Capa de Tracks
   useEffect(() => {
     if (!map.current || !tracks.features || tracks.features.length === 0 || !mapLoaded) return
 
@@ -1690,6 +2043,7 @@ export const Mapa3d = () => {
     }
   }, [tracks, mapLoaded, showTracks])
 
+  // Capa de Áreas Protegidas
   useEffect(() => {
     if (!map.current || !areasProtegidas.length || !mapLoaded) return
 
@@ -1764,6 +2118,7 @@ export const Mapa3d = () => {
     }
   }, [areasProtegidas, mapLoaded, showAreas])
 
+  // Capa de Servicios
   useEffect(() => {
     if (!map.current || !servicios.length || !mapLoaded) return
 
@@ -1842,6 +2197,7 @@ export const Mapa3d = () => {
     }
   }, [servicios, mapLoaded, showServicios])
 
+  // Capa de Atractivos
   useEffect(() => {
     if (!map.current || !atractivos.length || !mapLoaded) return
 
@@ -2041,6 +2397,12 @@ export const Mapa3d = () => {
         </button>
         <button onClick={() => setShowSuelos(!showSuelos)} style={toggleButtonStyles(showSuelos)}>
           <span>🌱</span> Suelos {showSuelos ? '✓' : '✗'}
+        </button>
+        <button onClick={() => setShowVegetacion(!showVegetacion)} style={toggleButtonStyles(showVegetacion)}>
+          <span>🌿</span> Vegetación {showVegetacion ? '✓' : '✗'}
+        </button>
+        <button onClick={() => setShowSistemasTierra(!showSistemasTierra)} style={toggleButtonStyles(showSistemasTierra)}>
+          <span>🏔️</span> Sistemas de Tierra {showSistemasTierra ? '✓' : '✗'}
         </button>
       </div>
       
@@ -2387,6 +2749,177 @@ export const Mapa3d = () => {
                 <p style={{ margin: 0, color: '#dc2626', lineHeight: '1.5', fontSize: '15px' }}>
                   Esta provincia forma parte de la división territorial intermedia de Bolivia, 
                   entre departamentos y municipios, con características geográficas y culturales propias.
+                </p>
+              </div>
+            </>
+          )}
+
+          {popupType === 'vegetacion' && vegetacionSeleccionada && (
+            <>
+              <h3 style={{ margin: '0 0 18px 0', color: '#333', borderBottom: '2px solid #228B22', paddingBottom: '10px', fontSize: '20px' }}>
+                🌿 {vegetacionSeleccionada.tipos_veg || 'Tipo de Vegetación'}
+              </h3>
+              
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Código de Vegetación:</strong>
+                <span style={{ display: 'inline-block', background: '#228B22', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {vegetacionSeleccionada.codveg || 'No disponible'}
+                </span>
+              </div>
+
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Tipo de Vegetación:</strong>
+                <span style={{ display: 'inline-block', background: '#32CD32', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {vegetacionSeleccionada.tipos_veg || 'No especificado'}
+                </span>
+              </div>
+
+              {vegetacionSeleccionada.shape_area && (
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#666', fontSize: '16px' }}>Área:</strong>
+                  <span style={{ marginLeft: '10px', color: '#059669', fontWeight: 'bold', fontSize: '16px' }}>
+                    {parseFloat(vegetacionSeleccionada.shape_area).toLocaleString('es-ES', { maximumFractionDigits: 2 })} m²
+                  </span>
+                </div>
+              )}
+
+              {vegetacionSeleccionada.shape_leng && (
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#666', fontSize: '16px' }}>Longitud del perímetro:</strong>
+                  <span style={{ marginLeft: '10px', color: '#3b82f6', fontWeight: 'bold', fontSize: '16px' }}>
+                    {parseFloat(vegetacionSeleccionada.shape_leng).toLocaleString('es-ES', { maximumFractionDigits: 2 })} m
+                  </span>
+                </div>
+              )}
+
+              {vegetacionSeleccionada.ogc_fid && (
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#666', fontSize: '16px' }}>ID OGC:</strong>
+                  <span style={{ marginLeft: '10px', color: '#555', fontSize: '16px' }}>{vegetacionSeleccionada.ogc_fid}</span>
+                </div>
+              )}
+
+              {vegetacionSeleccionada.gml_id && (
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#666', fontSize: '16px' }}>ID GML:</strong>
+                  <span style={{ marginLeft: '10px', color: '#555', fontSize: '16px' }}>{vegetacionSeleccionada.gml_id}</span>
+                </div>
+              )}
+
+              {vegetacionSeleccionada.id_c && (
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#666', fontSize: '16px' }}>ID C:</strong>
+                  <span style={{ marginLeft: '10px', color: '#555', fontSize: '16px' }}>{vegetacionSeleccionada.id_c}</span>
+                </div>
+              )}
+
+              {vegetacionSeleccionada._errors && (
+                <div style={{ marginTop: '18px', padding: '12px', background: '#fef2f2', borderRadius: '8px', borderLeft: '4px solid #ef4444' }}>
+                  <strong style={{ color: '#666', display: 'block', marginBottom: '6px', fontSize: '16px' }}>Nota Técnica:</strong>
+                  <p style={{ margin: 0, color: '#dc2626', lineHeight: '1.5', fontSize: '15px' }}>
+                    {vegetacionSeleccionada._errors}
+                  </p>
+                </div>
+              )}
+
+              <div style={{ marginTop: '18px', padding: '12px', background: '#f0fdf4', borderRadius: '8px', borderLeft: '4px solid #228B22' }}>
+                <strong style={{ color: '#666', display: 'block', marginBottom: '6px', fontSize: '16px' }}>Información de la Vegetación:</strong>
+                <p style={{ margin: 0, color: '#065f46', lineHeight: '1.5', fontSize: '15px' }}>
+                  Esta capa representa los diferentes tipos de cobertura vegetal en el área de estudio, 
+                  incluyendo información sobre la distribución y características de la vegetación natural.
+                </p>
+              </div>
+            </>
+          )}
+
+          {popupType === 'sistemaTierra' && sistemaTierraSeleccionado && (
+            <>
+              <h3 style={{ margin: '0 0 18px 0', color: '#333', borderBottom: '2px solid #8B4513', paddingBottom: '10px', fontSize: '20px' }}>
+                🏔️ {sistemaTierraSeleccionado.cod_des || 'Sistema de Tierra'}
+              </h3>
+              
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Código:</strong>
+                <span style={{ display: 'inline-block', background: '#8B4513', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {sistemaTierraSeleccionado.codigo || 'Sin código'}
+                </span>
+              </div>
+
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Descripción Regional:</strong>
+                <span style={{ display: 'inline-block', background: '#A0522D', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {sistemaTierraSeleccionado.desc_regio || 'Sin descripción'}
+                </span>
+              </div>
+
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Composición Regional:</strong>
+                <span style={{ display: 'inline-block', background: '#CD853F', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {sistemaTierraSeleccionado.comp_regio || 'Sin composición'}
+                </span>
+              </div>
+
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Provincia de Tierra:</strong>
+                <span style={{ display: 'inline-block', background: '#D2691E', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {sistemaTierraSeleccionado.prov_tierr || 'Sin provincia'}
+                </span>
+              </div>
+
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Descripción Fisiográfica:</strong>
+                <span style={{ display: 'inline-block', background: '#F4A460', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {sistemaTierraSeleccionado.desc_fisio || 'Sin descripción fisiográfica'}
+                </span>
+              </div>
+
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Región de Tierra:</strong>
+                <span style={{ display: 'inline-block', background: '#DEB887', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {sistemaTierraSeleccionado.region_tie || 'Sin región'}
+                </span>
+              </div>
+
+              <div style={{ marginBottom: '18px' }}>
+                <strong style={{ color: '#666', fontSize: '16px' }}>Sistema Base:</strong>
+                <span style={{ display: 'inline-block', background: '#D2B48C', color: 'white', padding: '5px 10px', borderRadius: '12px', fontSize: '14px', marginLeft: '10px', marginTop: '5px' }}>
+                  {sistemaTierraSeleccionado.base_sist_ || 'Sin sistema base'}
+                </span>
+              </div>
+
+              {sistemaTierraSeleccionado.hectares && (
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#666', fontSize: '16px' }}>Hectáreas:</strong>
+                  <span style={{ marginLeft: '10px', color: '#059669', fontWeight: 'bold', fontSize: '16px' }}>
+                    {parseFloat(sistemaTierraSeleccionado.hectares).toLocaleString('es-ES')} ha
+                  </span>
+                </div>
+              )}
+
+              {sistemaTierraSeleccionado.shape_area && (
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#666', fontSize: '16px' }}>Área:</strong>
+                  <span style={{ marginLeft: '10px', color: '#3b82f6', fontWeight: 'bold', fontSize: '16px' }}>
+                    {parseFloat(sistemaTierraSeleccionado.shape_area).toLocaleString('es-ES', { maximumFractionDigits: 2 })} m²
+                  </span>
+                </div>
+              )}
+
+              {sistemaTierraSeleccionado.shape_leng && (
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#666', fontSize: '16px' }}>Longitud del perímetro:</strong>
+                  <span style={{ marginLeft: '10px', color: '#8B4513', fontWeight: 'bold', fontSize: '16px' }}>
+                    {parseFloat(sistemaTierraSeleccionado.shape_leng).toLocaleString('es-ES', { maximumFractionDigits: 2 })} m
+                  </span>
+                </div>
+              )}
+
+              <div style={{ marginTop: '18px', padding: '12px', background: '#fdf6e3', borderRadius: '8px', borderLeft: '4px solid #8B4513' }}>
+                <strong style={{ color: '#666', display: 'block', marginBottom: '6px', fontSize: '16px' }}>Información del Sistema de Tierra:</strong>
+                <p style={{ margin: 0, color: '#8B4513', lineHeight: '1.5', fontSize: '15px' }}>
+                  Los sistemas de tierra representan unidades territoriales con características 
+                  geológicas, geomorfológicas y ecológicas similares, utilizadas para la planificación 
+                  y gestión sostenible del territorio.
                 </p>
               </div>
             </>

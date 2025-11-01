@@ -15,6 +15,8 @@ import { municipios } from '../controller/Municipio'
 import { provincias } from '../controller/Provincia'
 import { cuencas } from '../controller/Cuencas'
 import { suelos } from '../controller/suelos'
+import { vegetacion } from '../controller/vegetacion'
+import { sistemas_tierra } from '../controller/sistema_tierra'
 
 export const router = Router()
 
@@ -38,3 +40,5 @@ router.get('/municipios', municipios)
 router.get('/provincias', provincias)
 router.get('/cuencas', cuencas)
 router.get('/suelos', suelos)
+router.get('/vegetacion', vegetacion)
+router.get('/sistemas_tierra', sistemas_tierra)

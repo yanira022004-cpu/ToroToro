@@ -48,3 +48,9 @@ GET http://localhost:3333/api/cuencas
 
 ###
 GET http://localhost:3333/api/suelos
+
+###
+GET http://localhost:3333/api/vegetacion
+
+###
+GET http://localhost:3333/api/sistemas_tierra
