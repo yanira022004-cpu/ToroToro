@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 
 export const Dashboard = () => {
   const [darkMode, setDarkMode] = useState(false);
+  const [busqueda, setBusqueda] = useState("");
+  const [atractivos, setAtractivos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const lightTheme = {
     bg: "#f8fafc",
@@ -133,6 +136,78 @@ export const Dashboard = () => {
       color: theme.subtle,
       margin: 0,
       fontWeight: "400",
+    },
+    searchContainer: {
+      marginBottom: "32px",
+      display: "flex",
+      gap: "16px",
+      alignItems: "center",
+      justifyContent: "space-between",
+      flexWrap: "wrap",
+    },
+    searchBox: {
+      flex: "1",
+      minWidth: "300px",
+      position: "relative",
+    },
+    searchInput: {
+      width: "90%",
+      padding: "14px 48px 14px 48px",
+      borderRadius: "12px",
+      border: `1px solid ${theme.border}`,
+      backgroundColor: theme.card,
+      color: theme.text,
+      fontSize: "16px",
+      fontWeight: "400",
+      transition: "all 0.3s ease",
+      boxShadow: theme.shadow,
+      "::placeholder": {
+        color: theme.subtle,
+      },
+      ":focus": {
+        outline: "none",
+        borderColor: theme.accent,
+        boxShadow: `0 0 0 3px ${theme.accent}20`,
+      },
+    },
+    searchIcon: {
+      position: "absolute",
+      left: "16px",
+      top: "50%",
+      transform: "translateY(-50%)",
+      fontSize: "20px",
+      color: theme.subtle,
+    },
+    clearButton: {
+      position: "absolute",
+      right: "12px",
+      top: "50%",
+      transform: "translateY(-50%)",
+      background: "none",
+      border: "none",
+      fontSize: "18px",
+      color: theme.subtle,
+      cursor: "pointer",
+      padding: "4px",
+      borderRadius: "4px",
+      transition: "all 0.2s ease",
+      display: busqueda ? "flex" : "none",
+      alignItems: "center",
+      justifyContent: "center",
+      ":hover": {
+        color: "#ef4444",
+        backgroundColor: "rgba(239, 68, 68, 0.1)",
+      },
+    },
+    resultsCounter: {
+      fontSize: "14px",
+      color: theme.subtle,
+      fontWeight: "500",
+      backgroundColor: theme.card,
+      padding: "8px 16px",
+      borderRadius: "8px",
+      border: `1px solid ${theme.border}`,
+      minWidth: "fit-content",
     },
     cardsGrid: {
       display: "grid",
@@ -269,10 +344,13 @@ export const Dashboard = () => {
       textTransform: "uppercase",
       letterSpacing: "0.5px",
     },
+    noResults: {
+      textAlign: "center",
+      padding: "60px",
+      color: theme.subtle,
+      fontSize: "16px",
+    },
   };
-
-  const [atractivos, setAtractivos] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAtractivos = async () => {
@@ -288,6 +366,18 @@ export const Dashboard = () => {
     };
     fetchAtractivos();
   }, []);
+
+  const clearSearch = () => {
+    setBusqueda("");
+  };
+
+  const atractivosFiltrados = atractivos.filter(item => 
+    item.nombre_atractivo?.toLowerCase().includes(busqueda.toLowerCase()) ||
+    item.tipo_atractivo?.toLowerCase().includes(busqueda.toLowerCase()) ||
+    item.estado?.toLowerCase().includes(busqueda.toLowerCase()) ||
+    item.nombre_categoria?.toLowerCase().includes(busqueda.toLowerCase()) ||
+    item.nivel_riesgo?.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
   const totalAtractivos = atractivos.length;
   const totalFosiles = atractivos.filter(a => a.tipo_atractivo === "FOSIL").length;
@@ -342,7 +432,7 @@ export const Dashboard = () => {
               </div>
             </Link>
           </nav>
-                    <button
+          <button
             onClick={() => setDarkMode(!darkMode)}
             style={styles.darkButton}
           >
@@ -391,6 +481,30 @@ export const Dashboard = () => {
             </div>
           ) : (
             <>
+              <div style={styles.searchContainer}>
+                <div style={styles.searchBox}>
+                  <div style={styles.searchIcon}>🔍</div>
+                  <input
+                    type="text"
+                    placeholder="Buscar atractivos por nombre, tipo, categoría, estado..."
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.target.value)}
+                    style={styles.searchInput}
+                  />
+                  
+                  <button
+                    onClick={clearSearch}
+                    style={styles.clearButton}
+                    title="Limpiar búsqueda"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div style={styles.resultsCounter}>
+                  {atractivosFiltrados.length} de {totalAtractivos} resultados
+                </div>
+              </div>
+
               <div style={styles.cardsGrid}>
                 <div style={styles.card}>
                   <div style={styles.cardIcon}>🏔️</div>
@@ -427,32 +541,40 @@ export const Dashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {atractivos.map((item, index) => (
-                      <tr key={index} style={styles.tr}>
-                        <td style={styles.tdNumero}>{index + 1}</td>
-                        <td style={styles.td}>
-                          <div style={{ fontWeight: "600" }}>{item.nombre_atractivo}</div>
-                        </td>
-                        <td style={styles.td}>
-                          <span style={styles.badge}>{item.tipo_atractivo}</span>
-                        </td>
-                        <td style={styles.td}>{item.estado}</td>
-                        <td style={styles.td}>
-                          <span style={{
-                            ...styles.badge,
-                            backgroundColor: theme.border,
-                            color: theme.text
-                          }}>
-                            {item.nombre_categoria}
-                          </span>
-                        </td>
-                        <td style={styles.td}>
-                          <span style={getRiskBadgeStyle(item.nivel_riesgo)}>
-                            {item.nivel_riesgo || "No especificado"}
-                          </span>
+                    {atractivosFiltrados.length > 0 ? (
+                      atractivosFiltrados.map((item, index) => (
+                        <tr key={index} style={styles.tr}>
+                          <td style={styles.tdNumero}>{index + 1}</td>
+                          <td style={styles.td}>
+                            <div style={{ fontWeight: "600" }}>{item.nombre_atractivo}</div>
+                          </td>
+                          <td style={styles.td}>
+                            <span style={styles.badge}>{item.tipo_atractivo}</span>
+                          </td>
+                          <td style={styles.td}>{item.estado}</td>
+                          <td style={styles.td}>
+                            <span style={{
+                              ...styles.badge,
+                              backgroundColor: theme.border,
+                              color: theme.text
+                            }}>
+                              {item.nombre_categoria}
+                            </span>
+                          </td>
+                          <td style={styles.td}>
+                            <span style={getRiskBadgeStyle(item.nivel_riesgo)}>
+                              {item.nivel_riesgo || "No especificado"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" style={styles.noResults}>
+                          No se encontraron atractivos que coincidan con "{busqueda}"
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>

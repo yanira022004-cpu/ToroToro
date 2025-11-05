@@ -3,7 +3,10 @@ import { Link } from "react-router-dom";
 
 export const ServiciosDashboard = () => {
   // 🔹 Estado para el modo oscuro
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(false)
+  const [busqueda, setBusqueda] = useState("")
+  const [servicios, setServicios] = useState([])
+  const [loading, setLoading] = useState(true)
 
   // 🔹 Temas mejorados
   const lightTheme = {
@@ -141,6 +144,78 @@ export const ServiciosDashboard = () => {
       color: theme.subtle,
       margin: 0,
       fontWeight: "400",
+    },
+    searchContainer: {
+      marginBottom: "32px",
+      display: "flex",
+      gap: "16px",
+      alignItems: "center",
+      justifyContent: "space-between",
+      flexWrap: "wrap",
+    },
+    searchBox: {
+      flex: "1",
+      minWidth: "300px",
+      position: "relative",
+    },
+    searchInput: {
+      width: "90%",
+      padding: "14px 48px 14px 48px",
+      borderRadius: "12px",
+      border: `1px solid ${theme.border}`,
+      backgroundColor: theme.card,
+      color: theme.text,
+      fontSize: "16px",
+      fontWeight: "400",
+      transition: "all 0.3s ease",
+      boxShadow: theme.shadow,
+      "::placeholder": {
+        color: theme.subtle,
+      },
+      ":focus": {
+        outline: "none",
+        borderColor: theme.accent,
+        boxShadow: `0 0 0 3px ${theme.accent}20`,
+      },
+    },
+    searchIcon: {
+      position: "absolute",
+      left: "16px",
+      top: "50%",
+      transform: "translateY(-50%)",
+      fontSize: "20px",
+      color: theme.subtle,
+    },
+    clearButton: {
+      position: "absolute",
+      right: "12px",
+      top: "50%",
+      transform: "translateY(-50%)",
+      background: "none",
+      border: "none",
+      fontSize: "18px",
+      color: theme.subtle,
+      cursor: "pointer",
+      padding: "4px",
+      borderRadius: "4px",
+      transition: "all 0.2s ease",
+      display: busqueda ? "flex" : "none",
+      alignItems: "center",
+      justifyContent: "center",
+      ":hover": {
+        color: "#ef4444",
+        backgroundColor: "rgba(239, 68, 68, 0.1)",
+      },
+    },
+    resultsCounter: {
+      fontSize: "14px",
+      color: theme.subtle,
+      fontWeight: "500",
+      backgroundColor: theme.card,
+      padding: "8px 16px",
+      borderRadius: "8px",
+      border: `1px solid ${theme.border}`,
+      minWidth: "fit-content",
     },
     statsGrid: {
       display: "grid",
@@ -281,14 +356,17 @@ export const ServiciosDashboard = () => {
       fontSize: "12px",
       fontWeight: "700",
     },
+    noResults: {
+      textAlign: "center",
+      padding: "60px",
+      color: theme.subtle,
+      fontSize: "16px",
+    },
   };
 
   // ================================
-  // 🔹 Estado y carga de datos
+  // 🔹 Carga de datos
   // ================================
-  const [servicios, setServicios] = useState([]);
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     const fetchServicios = async () => {
       try {
@@ -303,6 +381,19 @@ export const ServiciosDashboard = () => {
     };
     fetchServicios();
   }, []);
+  
+  const clearSearch = () => {
+    setBusqueda("");
+  };
+
+  // 🔹 Filtrar servicios basado en la búsqueda
+  const serviciosFiltrados = servicios.filter(servicio => 
+    servicio.nombre_atractivo?.toLowerCase().includes(busqueda.toLowerCase()) ||
+    servicio.nombre_servicio?.toLowerCase().includes(busqueda.toLowerCase()) ||
+    servicio.tipo_servicio?.toLowerCase().includes(busqueda.toLowerCase()) ||
+    servicio.direccion?.toLowerCase().includes(busqueda.toLowerCase()) ||
+    servicio.telefono?.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
   // 🔹 Estadísticas calculadas
   const totalServicios = servicios.length;
@@ -322,14 +413,25 @@ export const ServiciosDashboard = () => {
       'ALIMENTACIÓN': theme.success,
       'TRANSPORTE': theme.warning,
       'GUÍA': theme.danger,
+      'HOSPEDAJE': theme.accent,
+      'ALIMENTACION': theme.success,
+      'RESTAURANTE': theme.success,
+      'HOTEL': theme.accent,
+      'HOSTAL': theme.accent,
     };
-    return tipos[tipo] || theme.subtle;
+    return tipos[tipo?.toUpperCase()] || theme.subtle;
   };
 
   const getRatingStars = (calificacion) => {
     const rating = parseFloat(calificacion) || 0;
-    const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
-    return stars;
+    const fullStars = Math.floor(rating);
+    const emptyStars = 5 - fullStars;
+    return (
+      <>
+        {'★'.repeat(fullStars)}
+        {'☆'.repeat(emptyStars)}
+      </>
+    );
   };
 
   return (
@@ -414,6 +516,29 @@ export const ServiciosDashboard = () => {
             <p style={styles.headerSubtitle}>Directorio completo de servicios disponibles en Torotoro</p>
           </header>
 
+              <div style={styles.searchContainer}>
+                <div style={styles.searchBox}>
+                  <div style={styles.searchIcon}>🔍</div>
+                  <input
+                    type="text"
+                    placeholder="Buscar servicios por nombre, tipo, dirección, teléfono..."
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.target.value)}
+                    style={styles.searchInput}
+                  />
+                  
+                  <button
+                    onClick={clearSearch}
+                    style={styles.clearButton}
+                    title="Limpiar búsqueda"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div style={styles.resultsCounter}>
+                  {serviciosFiltrados.length} de {totalServicios} resultados
+                </div>
+              </div>
           {/* 🔹 Estadísticas Rápidas */}
           <div style={styles.statsGrid}>
             <div style={styles.statCard}>
@@ -441,84 +566,100 @@ export const ServiciosDashboard = () => {
               <div>Cargando servicios...</div>
             </div>
           ) : (
-            <div style={styles.tableContainer}>
-              <table style={styles.table}>
-                <thead>
-                  <tr>
-                    <th style={styles.th}>#</th>
-                    <th style={styles.th}>Atractivo Turístico</th>
-                    <th style={styles.th}>Nombre del Servicio</th>
-                    <th style={styles.th}>Tipo de Servicio</th>
-                    <th style={styles.th}>Costo</th>
-                    <th style={styles.th}>Dirección</th>
-                    <th style={styles.th}>Teléfono</th>
-                    <th style={styles.th}>Calificación</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {servicios.map((servicio, index) => (
-                    <tr key={index} style={styles.tr}>
-                      <td style={styles.tdNumero}>{index + 1}</td>
-                      <td style={styles.td}>
-                        <div style={{ fontWeight: "600" }}>{servicio.nombre_atractivo}</div>
-                      </td>
-                      <td style={styles.td}>
-                        <div style={{ fontWeight: "500" }}>{servicio.nombre_servicio}</div>
-                      </td>
-                      <td style={styles.td}>
-                        <span style={{
-                          ...styles.badge,
-                          backgroundColor: getTipoServicioColor(servicio.tipo_servicio) + "20",
-                          color: getTipoServicioColor(servicio.tipo_servicio)
-                        }}>
-                          {servicio.tipo_servicio}
-                        </span>
-                      </td>
-                      <td style={styles.td}>
-                        <span style={styles.costBadge}>
-                          {parseFloat(servicio.costo).toFixed(2)} Bs
-                        </span>
-                      </td>
-                      <td style={styles.td}>
-                        <div style={{ 
-                          maxWidth: "200px", 
-                          whiteSpace: "normal",
-                          fontSize: "13px",
-                          color: theme.subtle
-                        }}>
-                          {servicio.direccion}
-                        </div>
-                      </td>
-                      <td style={styles.td}>
-                        <code style={{ 
-                          backgroundColor: theme.border,
-                          padding: "4px 8px",
-                          borderRadius: "4px",
-                          fontSize: "13px",
-                          fontFamily: "monospace"
-                        }}>
-                          {servicio.telefono}
-                        </code>
-                      </td>
-                      <td style={styles.td}>
-                        <div style={styles.rating}>
-                          <span style={{ color: theme.warning }}>
-                            {getRatingStars(servicio.calificacion)}
-                          </span>
-                          <span style={{ 
-                            fontSize: "12px", 
-                            color: theme.subtle,
-                            marginLeft: "4px"
-                          }}>
-                            ({parseFloat(servicio.calificacion || 0).toFixed(1)})
-                          </span>
-                        </div>
-                      </td>
+            <>
+              {/* 🔹 Barra de Búsqueda */}
+
+              {/* 🔹 Tabla de Servicios */}
+              <div style={styles.tableContainer}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={styles.th}>#</th>
+                      <th style={styles.th}>Atractivo Turístico</th>
+                      <th style={styles.th}>Nombre del Servicio</th>
+                      <th style={styles.th}>Tipo de Servicio</th>
+                      <th style={styles.th}>Costo</th>
+                      <th style={styles.th}>Dirección</th>
+                      <th style={styles.th}>Teléfono</th>
+                      <th style={styles.th}>Calificación</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {serviciosFiltrados.length > 0 ? (
+                      serviciosFiltrados.map((servicio, index) => (
+                        <tr key={index} style={styles.tr}>
+                          <td style={styles.tdNumero}>{index + 1}</td>
+                          <td style={styles.td}>
+                            <div style={{ fontWeight: "600" }}>{servicio.nombre_atractivo}</div>
+                          </td>
+                          <td style={styles.td}>
+                            <div style={{ fontWeight: "500" }}>{servicio.nombre_servicio}</div>
+                          </td>
+                          <td style={styles.td}>
+                            <span style={{
+                              ...styles.badge,
+                              backgroundColor: getTipoServicioColor(servicio.tipo_servicio) + "20",
+                              color: getTipoServicioColor(servicio.tipo_servicio)
+                            }}>
+                              {servicio.tipo_servicio}
+                            </span>
+                          </td>
+                          <td style={styles.td}>
+                            <span style={styles.costBadge}>
+                              {parseFloat(servicio.costo || 0).toFixed(2)} Bs
+                            </span>
+                          </td>
+                          <td style={styles.td}>
+                            <div style={{ 
+                              maxWidth: "200px", 
+                              whiteSpace: "normal",
+                              fontSize: "13px",
+                              color: theme.subtle
+                            }}>
+                              {servicio.direccion}
+                            </div>
+                          </td>
+                          <td style={styles.td}>
+                            <code style={{ 
+                              backgroundColor: theme.border,
+                              padding: "4px 8px",
+                              borderRadius: "4px",
+                              fontSize: "13px",
+                              fontFamily: "monospace"
+                            }}>
+                              {servicio.telefono}
+                            </code>
+                          </td>
+                          <td style={styles.td}>
+                            <div style={styles.rating}>
+                              <span style={{ color: theme.warning }}>
+                                {getRatingStars(servicio.calificacion)}
+                              </span>
+                              <span style={{ 
+                                fontSize: "12px", 
+                                color: theme.subtle,
+                                marginLeft: "4px"
+                              }}>
+                                ({parseFloat(servicio.calificacion || 0).toFixed(1)})
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="8" style={styles.noResults}>
+                          {busqueda 
+                            ? `No se encontraron servicios que coincidan con "${busqueda}"`
+                            : "No hay servicios disponibles"
+                          }
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
 
           <footer style={styles.footer}>
